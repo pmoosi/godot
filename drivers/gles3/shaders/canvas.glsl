@@ -805,7 +805,7 @@ void main() {
 #endif
 
 #ifdef MODE_LIGHT_ONLY
-	color.a *= light_only_alpha;
+	color.a *= clamp(light_only_alpha, 0.0, 1.0);
 #endif
 
 	frag_color = color;
