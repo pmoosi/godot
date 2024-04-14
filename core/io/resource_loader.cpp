@@ -244,11 +244,11 @@ Ref<Resource> ResourceLoader::_load(const String &p_path, const String &p_origin
 		thread_load_mutex.lock();
 		HashMap<String, ThreadLoadTask>::Iterator E = thread_load_tasks.find(load_paths_stack->get(load_paths_stack->size() - 1));
 		if (E) {
-			E->value.sub_tasks.insert(p_original_path);
+			E->value.sub_tasks.insert(p_path);
 		}
 		thread_load_mutex.unlock();
 	}
-	load_paths_stack->push_back(p_original_path);
+	load_paths_stack->push_back(p_path);
 
 	// Try all loaders and pick the first match for the type hint
 	bool found = false;
@@ -378,7 +378,7 @@ static String _validate_local_path(const String &p_path) {
 	if (uid != ResourceUID::INVALID_ID) {
 		return ResourceUID::get_singleton()->get_id_path(uid);
 	} else if (p_path.is_relative_path()) {
-		return "res://" + p_path;
+		return ("res://" + p_path).simplify_path();
 	} else {
 		return ProjectSettings::get_singleton()->localize_path(p_path);
 	}
