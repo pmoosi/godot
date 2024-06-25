@@ -1645,7 +1645,7 @@ void Node3DEditorViewport::input(const Ref<InputEvent> &p_event) {
 }
 
 void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
-	if (previewing) {
+	if (previewing || get_viewport()->gui_get_drag_data()) {
 		return; //do NONE
 	}
 
@@ -3043,29 +3043,45 @@ void Node3DEditorViewport::_notification(int p_what) {
 			preview_camera->set_icon(get_editor_theme_icon(SNAME("Camera3D")));
 			Control *gui_base = EditorNode::get_singleton()->get_gui_base();
 
+			const Ref<StyleBox> &information_3d_stylebox = gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles));
+
 			view_menu->begin_bulk_theme_override();
-			view_menu->add_theme_style_override(CoreStringName(normal), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			view_menu->add_theme_style_override("hover", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			view_menu->add_theme_style_override(SceneStringName(pressed), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			view_menu->add_theme_style_override("focus", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			view_menu->add_theme_style_override("disabled", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
+			view_menu->add_theme_style_override(CoreStringName(normal), information_3d_stylebox);
+			view_menu->add_theme_style_override("normal_mirrored", information_3d_stylebox);
+			view_menu->add_theme_style_override("hover", information_3d_stylebox);
+			view_menu->add_theme_style_override("hover_mirrored", information_3d_stylebox);
+			view_menu->add_theme_style_override("hover_pressed", information_3d_stylebox);
+			view_menu->add_theme_style_override("hover_pressed_mirrored", information_3d_stylebox);
+			view_menu->add_theme_style_override(SceneStringName(pressed), information_3d_stylebox);
+			view_menu->add_theme_style_override("pressed_mirrored", information_3d_stylebox);
+			view_menu->add_theme_style_override("focus", information_3d_stylebox);
+			view_menu->add_theme_style_override("focus_mirrored", information_3d_stylebox);
+			view_menu->add_theme_style_override("disabled", information_3d_stylebox);
+			view_menu->add_theme_style_override("disabled_mirrored", information_3d_stylebox);
 			view_menu->end_bulk_theme_override();
 
 			preview_camera->begin_bulk_theme_override();
-			preview_camera->add_theme_style_override(CoreStringName(normal), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			preview_camera->add_theme_style_override("hover", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			preview_camera->add_theme_style_override(SceneStringName(pressed), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			preview_camera->add_theme_style_override("focus", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			preview_camera->add_theme_style_override("disabled", gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
+			preview_camera->add_theme_style_override(CoreStringName(normal), information_3d_stylebox);
+			preview_camera->add_theme_style_override("normal_mirrored", information_3d_stylebox);
+			preview_camera->add_theme_style_override("hover", information_3d_stylebox);
+			preview_camera->add_theme_style_override("hover_mirrored", information_3d_stylebox);
+			preview_camera->add_theme_style_override("hover_pressed", information_3d_stylebox);
+			preview_camera->add_theme_style_override("hover_pressed_mirrored", information_3d_stylebox);
+			preview_camera->add_theme_style_override(SceneStringName(pressed), information_3d_stylebox);
+			preview_camera->add_theme_style_override("pressed_mirrored", information_3d_stylebox);
+			preview_camera->add_theme_style_override("focus", information_3d_stylebox);
+			preview_camera->add_theme_style_override("focus_mirrored", information_3d_stylebox);
+			preview_camera->add_theme_style_override("disabled", information_3d_stylebox);
+			preview_camera->add_theme_style_override("disabled_mirrored", information_3d_stylebox);
 			preview_camera->end_bulk_theme_override();
 
 			frame_time_gradient->set_color(0, get_theme_color(SNAME("success_color"), EditorStringName(Editor)));
 			frame_time_gradient->set_color(1, get_theme_color(SNAME("warning_color"), EditorStringName(Editor)));
 			frame_time_gradient->set_color(2, get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
 
-			info_label->add_theme_style_override(CoreStringName(normal), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
+			info_label->add_theme_style_override(CoreStringName(normal), information_3d_stylebox);
 
-			frame_time_panel->add_theme_style_override(SceneStringName(panel), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
+			frame_time_panel->add_theme_style_override(SceneStringName(panel), information_3d_stylebox);
 			// Set a minimum width to prevent the width from changing all the time
 			// when numbers vary rapidly. This minimum width is set based on a
 			// GPU time of 999.99 ms in the current editor language.
@@ -3073,8 +3089,8 @@ void Node3DEditorViewport::_notification(int p_what) {
 			frame_time_panel->set_custom_minimum_size(Size2(min_width, 0) * EDSCALE);
 			frame_time_vbox->add_theme_constant_override("separation", Math::round(-1 * EDSCALE));
 
-			cinema_label->add_theme_style_override(CoreStringName(normal), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
-			locked_label->add_theme_style_override(CoreStringName(normal), gui_base->get_theme_stylebox(SNAME("Information3dViewport"), EditorStringName(EditorStyles)));
+			cinema_label->add_theme_style_override(CoreStringName(normal), information_3d_stylebox);
+			locked_label->add_theme_style_override(CoreStringName(normal), information_3d_stylebox);
 		} break;
 
 		case NOTIFICATION_DRAG_END: {
@@ -5372,6 +5388,7 @@ Node3DEditorViewport::Node3DEditorViewport(Node3DEditor *p_spatial_editor, int p
 	cinema_label->set_anchor_and_offset(SIDE_TOP, ANCHOR_BEGIN, 10 * EDSCALE);
 	cinema_label->set_h_grow_direction(GROW_DIRECTION_END);
 	cinema_label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+	cinema_label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
 	surface->add_child(cinema_label);
 	cinema_label->set_text(TTR("Cinematic Preview"));
 	cinema_label->hide();
@@ -5379,6 +5396,7 @@ Node3DEditorViewport::Node3DEditorViewport(Node3DEditor *p_spatial_editor, int p
 
 	locked_label = memnew(Label);
 	locked_label->set_horizontal_alignment(HORIZONTAL_ALIGNMENT_CENTER);
+	locked_label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
 	locked_label->set_h_size_flags(SIZE_SHRINK_CENTER);
 	bottom_center_vbox->add_child(locked_label);
 	locked_label->set_text(TTR("View Rotation Locked"));
@@ -8720,7 +8738,7 @@ Node3DEditor::Node3DEditor() {
 	snap_dialog = memnew(ConfirmationDialog);
 	snap_dialog->set_title(TTR("Snap Settings"));
 	add_child(snap_dialog);
-	snap_dialog->connect("confirmed", callable_mp(this, &Node3DEditor::_snap_changed));
+	snap_dialog->connect(SceneStringName(confirmed), callable_mp(this, &Node3DEditor::_snap_changed));
 	snap_dialog->get_cancel_button()->connect(SceneStringName(pressed), callable_mp(this, &Node3DEditor::_snap_update));
 
 	VBoxContainer *snap_dialog_vbc = memnew(VBoxContainer);
@@ -8773,7 +8791,7 @@ Node3DEditor::Node3DEditor() {
 	settings_vbc->add_margin_child(TTR("View Z-Far:"), settings_zfar);
 
 	for (uint32_t i = 0; i < VIEWPORTS_COUNT; ++i) {
-		settings_dialog->connect("confirmed", callable_mp(viewports[i], &Node3DEditorViewport::_view_settings_confirmed).bind(0.0));
+		settings_dialog->connect(SceneStringName(confirmed), callable_mp(viewports[i], &Node3DEditorViewport::_view_settings_confirmed).bind(0.0));
 	}
 
 	/* XFORM DIALOG */
@@ -8837,7 +8855,7 @@ Node3DEditor::Node3DEditor() {
 	xform_type->add_item(TTR("Post"));
 	xform_vbc->add_child(xform_type);
 
-	xform_dialog->connect("confirmed", callable_mp(this, &Node3DEditor::_xform_dialog_action));
+	xform_dialog->connect(SceneStringName(confirmed), callable_mp(this, &Node3DEditor::_xform_dialog_action));
 
 	selected = nullptr;
 
@@ -8915,7 +8933,7 @@ void fragment() {
 		sun_angle_altitude->set_max(90);
 		sun_angle_altitude->set_min(-90);
 		sun_angle_altitude->set_step(0.1);
-		sun_angle_altitude->connect("value_changed", callable_mp(this, &Node3DEditor::_sun_direction_angle_set).unbind(1));
+		sun_angle_altitude->connect(SceneStringName(value_changed), callable_mp(this, &Node3DEditor::_sun_direction_angle_set).unbind(1));
 		sun_angle_altitude_vbox->add_child(sun_angle_altitude);
 		sun_angle_hbox->add_child(sun_angle_altitude_vbox);
 		VBoxContainer *sun_angle_azimuth_vbox = memnew(VBoxContainer);
@@ -8929,7 +8947,7 @@ void fragment() {
 		sun_angle_azimuth->set_step(0.1);
 		sun_angle_azimuth->set_allow_greater(true);
 		sun_angle_azimuth->set_allow_lesser(true);
-		sun_angle_azimuth->connect("value_changed", callable_mp(this, &Node3DEditor::_sun_direction_angle_set).unbind(1));
+		sun_angle_azimuth->connect(SceneStringName(value_changed), callable_mp(this, &Node3DEditor::_sun_direction_angle_set).unbind(1));
 		sun_angle_azimuth_vbox->add_child(sun_angle_azimuth);
 		sun_angle_hbox->add_child(sun_angle_azimuth_vbox);
 		sun_angle_hbox->add_theme_constant_override("separation", 10);
@@ -8946,11 +8964,11 @@ void fragment() {
 		sun_energy->set_min(0);
 		sun_energy->set_step(0.05);
 		sun_vb->add_margin_child(TTR("Sun Energy"), sun_energy);
-		sun_energy->connect("value_changed", callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
+		sun_energy->connect(SceneStringName(value_changed), callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
 
 		sun_max_distance = memnew(EditorSpinSlider);
 		sun_vb->add_margin_child(TTR("Shadow Max Distance"), sun_max_distance);
-		sun_max_distance->connect("value_changed", callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
+		sun_max_distance->connect(SceneStringName(value_changed), callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
 		sun_max_distance->set_min(1);
 		sun_max_distance->set_max(4096);
 
@@ -8998,7 +9016,7 @@ void fragment() {
 		environ_energy->set_max(8.0);
 		environ_energy->set_min(0);
 		environ_energy->set_step(0.05);
-		environ_energy->connect("value_changed", callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
+		environ_energy->connect(SceneStringName(value_changed), callable_mp(this, &Node3DEditor::_preview_settings_changed).unbind(1));
 		environ_vb->add_margin_child(TTR("Sky Energy"), environ_energy);
 		HBoxContainer *fx_vb = memnew(HBoxContainer);
 		fx_vb->set_h_size_flags(SIZE_EXPAND_FILL);

@@ -2525,6 +2525,12 @@ bool CanvasItemEditor::_gui_input_ruler_tool(const Ref<InputEvent> &p_event) {
 		ruler_tool_origin = snap_point(viewport->get_local_mouse_position() / zoom + view_offset);
 	}
 
+	if (ruler_tool_active && b.is_valid() && b->get_button_index() == MouseButton::RIGHT) {
+		ruler_tool_active = false;
+		viewport->queue_redraw();
+		return true;
+	}
+
 	if (b.is_valid() && b->get_button_index() == MouseButton::LEFT) {
 		if (b->is_pressed()) {
 			ruler_tool_active = true;
@@ -2623,10 +2629,10 @@ void CanvasItemEditor::_gui_input_viewport(const Ref<InputEvent> &p_event) {
 			// print_line("Move");
 		} else if (_gui_input_anchors(p_event)) {
 			// print_line("Anchors");
-		} else if (_gui_input_select(p_event)) {
-			// print_line("Selection");
 		} else if (_gui_input_ruler_tool(p_event)) {
 			// print_line("Measure");
+		} else if (_gui_input_select(p_event)) {
+			// print_line("Selection");
 		} else {
 			// print_line("Not accepted");
 			accepted = false;
@@ -5275,12 +5281,12 @@ CanvasItemEditor::CanvasItemEditor() {
 
 	h_scroll = memnew(HScrollBar);
 	viewport->add_child(h_scroll);
-	h_scroll->connect("value_changed", callable_mp(this, &CanvasItemEditor::_update_scroll));
+	h_scroll->connect(SceneStringName(value_changed), callable_mp(this, &CanvasItemEditor::_update_scroll));
 	h_scroll->hide();
 
 	v_scroll = memnew(VScrollBar);
 	viewport->add_child(v_scroll);
-	v_scroll->connect("value_changed", callable_mp(this, &CanvasItemEditor::_update_scroll));
+	v_scroll->connect(SceneStringName(value_changed), callable_mp(this, &CanvasItemEditor::_update_scroll));
 	v_scroll->hide();
 
 	viewport->add_child(controls_vb);
@@ -5609,7 +5615,7 @@ CanvasItemEditor::CanvasItemEditor() {
 	p->add_shortcut(ED_SHORTCUT("canvas_item_editor/anim_clear_pose", TTR("Clear Pose"), KeyModifierMask::SHIFT | Key::K), ANIM_CLEAR_POSE);
 
 	snap_dialog = memnew(SnapDialog);
-	snap_dialog->connect("confirmed", callable_mp(this, &CanvasItemEditor::_snap_changed));
+	snap_dialog->connect(SceneStringName(confirmed), callable_mp(this, &CanvasItemEditor::_snap_changed));
 	add_child(snap_dialog);
 
 	select_sb = Ref<StyleBoxTexture>(memnew(StyleBoxTexture));
@@ -6266,7 +6272,7 @@ CanvasItemEditorViewport::CanvasItemEditorViewport(CanvasItemEditor *p_canvas_it
 	texture_node_type_selector = memnew(AcceptDialog);
 	EditorNode::get_singleton()->get_gui_base()->add_child(texture_node_type_selector);
 	texture_node_type_selector->set_title(TTR("Change Default Type"));
-	texture_node_type_selector->connect("confirmed", callable_mp(this, &CanvasItemEditorViewport::_on_change_type_confirmed));
+	texture_node_type_selector->connect(SceneStringName(confirmed), callable_mp(this, &CanvasItemEditorViewport::_on_change_type_confirmed));
 	texture_node_type_selector->connect("canceled", callable_mp(this, &CanvasItemEditorViewport::_on_change_type_closed));
 
 	VBoxContainer *vbc = memnew(VBoxContainer);

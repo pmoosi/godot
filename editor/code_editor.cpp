@@ -252,7 +252,7 @@ void FindReplaceBar::_replace() {
 void FindReplaceBar::_replace_all() {
 	text_editor->begin_complex_operation();
 	text_editor->remove_secondary_carets();
-	text_editor->disconnect("text_changed", callable_mp(this, &FindReplaceBar::_editor_text_changed));
+	text_editor->disconnect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_editor_text_changed));
 	// Line as x so it gets priority in comparison, column as y.
 	Point2i orig_cursor(text_editor->get_caret_line(0), text_editor->get_caret_column(0));
 	Point2i prev_match = Point2(-1, -1);
@@ -341,7 +341,7 @@ void FindReplaceBar::_replace_all() {
 	matches_label->add_theme_color_override(SceneStringName(font_color), rc > 0 ? get_theme_color(SceneStringName(font_color), SNAME("Label")) : get_theme_color(SNAME("error_color"), EditorStringName(Editor)));
 	matches_label->set_text(vformat(TTR("%d replaced."), rc));
 
-	callable_mp((Object *)text_editor, &Object::connect).call_deferred("text_changed", callable_mp(this, &FindReplaceBar::_editor_text_changed), 0U);
+	callable_mp((Object *)text_editor, &Object::connect).call_deferred(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_editor_text_changed), 0U);
 	results_count = -1;
 	results_count_to_current = -1;
 	needs_to_count_results = true;
@@ -655,7 +655,7 @@ void FindReplaceBar::set_text_edit(CodeTextEditor *p_text_editor) {
 	if (base_text_editor) {
 		base_text_editor->remove_find_replace_bar();
 		base_text_editor = nullptr;
-		text_editor->disconnect("text_changed", callable_mp(this, &FindReplaceBar::_editor_text_changed));
+		text_editor->disconnect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_editor_text_changed));
 		text_editor = nullptr;
 	}
 
@@ -668,7 +668,7 @@ void FindReplaceBar::set_text_edit(CodeTextEditor *p_text_editor) {
 	needs_to_count_results = true;
 	base_text_editor = p_text_editor;
 	text_editor = base_text_editor->get_text_editor();
-	text_editor->connect("text_changed", callable_mp(this, &FindReplaceBar::_editor_text_changed));
+	text_editor->connect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_editor_text_changed));
 
 	_update_results_count();
 	_update_matches_display();
@@ -708,7 +708,7 @@ FindReplaceBar::FindReplaceBar() {
 	search_text->set_placeholder(TTR("Find"));
 	search_text->set_tooltip_text(TTR("Find"));
 	search_text->set_custom_minimum_size(Size2(100 * EDSCALE, 0));
-	search_text->connect("text_changed", callable_mp(this, &FindReplaceBar::_search_text_changed));
+	search_text->connect(SceneStringName(text_changed), callable_mp(this, &FindReplaceBar::_search_text_changed));
 	search_text->connect("text_submitted", callable_mp(this, &FindReplaceBar::_search_text_submitted));
 	search_text->connect(SceneStringName(focus_exited), callable_mp(this, &FindReplaceBar::_focus_lost));
 
@@ -1049,6 +1049,9 @@ void CodeTextEditor::update_editor_settings() {
 	text_editor->set_smooth_scroll_enabled(EDITOR_GET("text_editor/behavior/navigation/smooth_scrolling"));
 	text_editor->set_v_scroll_speed(EDITOR_GET("text_editor/behavior/navigation/v_scroll_speed"));
 	text_editor->set_drag_and_drop_selection_enabled(EDITOR_GET("text_editor/behavior/navigation/drag_and_drop_selection"));
+	text_editor->set_use_default_word_separators(EDITOR_GET("text_editor/behavior/navigation/use_default_word_separators"));
+	text_editor->set_use_custom_word_separators(EDITOR_GET("text_editor/behavior/navigation/use_custom_word_separators"));
+	text_editor->set_custom_word_separators(EDITOR_GET("text_editor/behavior/navigation/custom_word_separators"));
 
 	// Behavior: Indent
 	set_indent_using_spaces(EDITOR_GET("text_editor/behavior/indent/type"));
@@ -1816,7 +1819,7 @@ CodeTextEditor::CodeTextEditor() {
 
 	text_editor->connect(SceneStringName(gui_input), callable_mp(this, &CodeTextEditor::_text_editor_gui_input));
 	text_editor->connect("caret_changed", callable_mp(this, &CodeTextEditor::_line_col_changed));
-	text_editor->connect("text_changed", callable_mp(this, &CodeTextEditor::_text_changed));
+	text_editor->connect(SceneStringName(text_changed), callable_mp(this, &CodeTextEditor::_text_changed));
 	text_editor->connect("code_completion_requested", callable_mp(this, &CodeTextEditor::_complete_request));
 	TypedArray<String> cs;
 	cs.push_back(".");
