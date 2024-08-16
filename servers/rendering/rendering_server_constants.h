@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  image_loader_hdr.h                                                    */
+/*  rendering_server_constants.h                                          */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,17 +28,21 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef IMAGE_LOADER_HDR_H
-#define IMAGE_LOADER_HDR_H
+#ifndef RENDERING_SERVER_CONSTANTS_H
+#define RENDERING_SERVER_CONSTANTS_H
 
-#include "core/io/image_loader.h"
+// Use for constants etc. that need not be included as often as rendering_server.h
+// to reduce dependencies and prevent slow compilation.
 
-class ImageLoaderHDR : public ImageFormatLoader {
-public:
-	virtual Error load_image(Ref<Image> p_image, Ref<FileAccess> f, BitField<ImageFormatLoader::LoaderFlags> p_flags, float p_scale);
-	virtual void get_recognized_extensions(List<String> *p_extensions) const;
+// This is a "cheap" include, and can be used from scene side code as well as servers.
 
-	ImageLoaderHDR();
-};
+// N.B. ONLY allow these defined in DEV_ENABLED builds, they will slow
+// performance, and are only necessary to use for debugging.
+#ifdef DEV_ENABLED
 
-#endif // IMAGE_LOADER_HDR_H
+// Uncomment this define to produce debugging output for physics interpolation.
+//#define RENDERING_SERVER_DEBUG_PHYSICS_INTERPOLATION
+
+#endif // DEV_ENABLED
+
+#endif // RENDERING_SERVER_CONSTANTS_H

@@ -1639,13 +1639,43 @@ Vector<int> String::split_ints_mk(const Vector<String> &p_splitters, bool p_allo
 }
 
 String String::join(const Vector<String> &parts) const {
-	String ret;
-	for (int i = 0; i < parts.size(); ++i) {
-		if (i > 0) {
-			ret += *this;
-		}
-		ret += parts[i];
+	if (parts.is_empty()) {
+		return String();
+	} else if (parts.size() == 1) {
+		return parts[0];
 	}
+
+	const int this_length = length();
+
+	int new_size = (parts.size() - 1) * this_length;
+	for (const String &part : parts) {
+		new_size += part.length();
+	}
+	new_size += 1;
+
+	String ret;
+	ret.resize(new_size);
+	char32_t *ret_ptrw = ret.ptrw();
+	const char32_t *this_ptr = ptr();
+
+	bool first = true;
+	for (const String &part : parts) {
+		if (first) {
+			first = false;
+		} else if (this_length) {
+			memcpy(ret_ptrw, this_ptr, this_length * sizeof(char32_t));
+			ret_ptrw += this_length;
+		}
+
+		const int part_length = part.length();
+		if (part_length) {
+			memcpy(ret_ptrw, part.ptr(), part_length * sizeof(char32_t));
+			ret_ptrw += part_length;
+		}
+	}
+
+	*ret_ptrw = 0;
+
 	return ret;
 }
 
@@ -3149,7 +3179,7 @@ Vector<uint8_t> String::sha256_buffer() const {
 }
 
 String String::insert(int p_at_pos, const String &p_string) const {
-	if (p_at_pos < 0) {
+	if (p_string.is_empty() || p_at_pos < 0) {
 		return *this;
 	}
 
@@ -3157,17 +3187,27 @@ String String::insert(int p_at_pos, const String &p_string) const {
 		p_at_pos = length();
 	}
 
-	String pre;
+	String ret;
+	ret.resize(length() + p_string.length() + 1);
+	char32_t *ret_ptrw = ret.ptrw();
+	const char32_t *this_ptr = ptr();
+
 	if (p_at_pos > 0) {
-		pre = substr(0, p_at_pos);
+		memcpy(ret_ptrw, this_ptr, p_at_pos * sizeof(char32_t));
+		ret_ptrw += p_at_pos;
 	}
 
-	String post;
+	memcpy(ret_ptrw, p_string.ptr(), p_string.length() * sizeof(char32_t));
+	ret_ptrw += p_string.length();
+
 	if (p_at_pos < length()) {
-		post = substr(p_at_pos, length() - p_at_pos);
+		memcpy(ret_ptrw, this_ptr + p_at_pos, (length() - p_at_pos) * sizeof(char32_t));
+		ret_ptrw += length() - p_at_pos;
 	}
 
-	return pre + p_string + post;
+	*ret_ptrw = 0;
+
+	return ret;
 }
 
 String String::erase(int p_pos, int p_chars) const {
@@ -5321,6 +5361,11 @@ String String::lpad(int min_length, const String &character) const {
 //   "fish %s %d pie" % ["frog", 12]
 // In case of an error, the string returned is the error description and "error" is true.
 String String::sprintf(const Array &values, bool *error) const {
+	static const String ZERO("0");
+	static const String SPACE(" ");
+	static const String MINUS("-");
+	static const String PLUS("+");
+
 	String formatted;
 	char32_t *self = (char32_t *)get_data();
 	bool in_format = false;
@@ -5343,7 +5388,7 @@ String String::sprintf(const Array &values, bool *error) const {
 		if (in_format) { // We have % - let's see what else we get.
 			switch (c) {
 				case '%': { // Replace %% with %
-					formatted += chr(c);
+					formatted += c;
 					in_format = false;
 					break;
 				}
@@ -5393,7 +5438,7 @@ String String::sprintf(const Array &values, bool *error) const {
 
 					// Padding.
 					int pad_chars_count = (negative || show_sign) ? min_chars - 1 : min_chars;
-					String pad_char = pad_with_zeros ? String("0") : String(" ");
+					const String &pad_char = pad_with_zeros ? ZERO : SPACE;
 					if (left_justified) {
 						str = str.rpad(pad_chars_count, pad_char);
 					} else {
@@ -5402,7 +5447,7 @@ String String::sprintf(const Array &values, bool *error) const {
 
 					// Sign.
 					if (show_sign || negative) {
-						String sign_char = negative ? "-" : "+";
+						const String &sign_char = negative ? MINUS : PLUS;
 						if (left_justified) {
 							str = str.insert(0, sign_char);
 						} else {
@@ -5439,7 +5484,7 @@ String String::sprintf(const Array &values, bool *error) const {
 
 					// Padding. Leave room for sign later if required.
 					int pad_chars_count = (is_negative || show_sign) ? min_chars - 1 : min_chars;
-					String pad_char = (pad_with_zeros && is_finite) ? String("0") : String(" "); // Never pad NaN or inf with zeros
+					const String &pad_char = (pad_with_zeros && is_finite) ? ZERO : SPACE; // Never pad NaN or inf with zeros
 					if (left_justified) {
 						str = str.rpad(pad_chars_count, pad_char);
 					} else {
@@ -5448,7 +5493,7 @@ String String::sprintf(const Array &values, bool *error) const {
 
 					// Add sign if needed.
 					if (show_sign || is_negative) {
-						String sign_char = is_negative ? "-" : "+";
+						const String &sign_char = is_negative ? MINUS : PLUS;
 						if (left_justified) {
 							str = str.insert(0, sign_char);
 						} else {
@@ -5501,7 +5546,7 @@ String String::sprintf(const Array &values, bool *error) const {
 
 						// Padding. Leave room for sign later if required.
 						int pad_chars_count = val < 0 ? min_chars - 1 : min_chars;
-						String pad_char = (pad_with_zeros && is_finite) ? String("0") : String(" "); // Never pad NaN or inf with zeros
+						const String &pad_char = (pad_with_zeros && is_finite) ? ZERO : SPACE; // Never pad NaN or inf with zeros
 						if (left_justified) {
 							number_str = number_str.rpad(pad_chars_count, pad_char);
 						} else {
@@ -5511,9 +5556,9 @@ String String::sprintf(const Array &values, bool *error) const {
 						// Add sign if needed.
 						if (val < 0) {
 							if (left_justified) {
-								number_str = number_str.insert(0, "-");
+								number_str = number_str.insert(0, MINUS);
 							} else {
-								number_str = number_str.insert(pad_with_zeros ? 0 : number_str.length() - initial_len, "-");
+								number_str = number_str.insert(pad_with_zeros ? 0 : number_str.length() - initial_len, MINUS);
 							}
 						}
 
@@ -5678,7 +5723,7 @@ String String::sprintf(const Array &values, bool *error) const {
 					in_decimals = false;
 					break;
 				default:
-					formatted += chr(c);
+					formatted += c;
 			}
 		}
 	}
