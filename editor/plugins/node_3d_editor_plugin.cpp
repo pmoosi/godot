@@ -800,7 +800,6 @@ ObjectID Node3DEditorViewport::_select_ray(const Point2 &p_pos) const {
 		RS::get_singleton()->sdfgi_set_debug_probe_select(pos, ray);
 	}
 
-	Vector<ObjectID> instances = RenderingServer::get_singleton()->instances_cull_ray(pos, pos + ray * camera->get_far(), get_tree()->get_root()->get_world_3d()->get_scenario());
 	HashSet<Ref<EditorNode3DGizmo>> found_gizmos;
 
 	Node *edited_scene = get_tree()->get_edited_scene_root();
@@ -808,9 +807,9 @@ ObjectID Node3DEditorViewport::_select_ray(const Point2 &p_pos) const {
 	Node *item = nullptr;
 	float closest_dist = 1e20;
 
-	for (int i = 0; i < instances.size(); i++) {
-		Node3D *spat = Object::cast_to<Node3D>(ObjectDB::get_instance(instances[i]));
+	Vector<Node3D *> nodes_with_gizmos = Node3DEditor::get_singleton()->gizmo_bvh_ray_query(pos, pos + ray * camera->get_far());
 
+	for (Node3D *spat : nodes_with_gizmos) {
 		if (!spat) {
 			continue;
 		}
@@ -863,12 +862,11 @@ void Node3DEditorViewport::_find_items_at_pos(const Point2 &p_pos, Vector<_RayRe
 	Vector3 ray = get_ray(p_pos);
 	Vector3 pos = get_ray_pos(p_pos);
 
-	Vector<ObjectID> instances = RenderingServer::get_singleton()->instances_cull_ray(pos, pos + ray * camera->get_far(), get_tree()->get_root()->get_world_3d()->get_scenario());
+	Vector<Node3D *> nodes_with_gizmos = Node3DEditor::get_singleton()->gizmo_bvh_ray_query(pos, pos + ray * camera->get_far());
+
 	HashSet<Node3D *> found_nodes;
 
-	for (int i = 0; i < instances.size(); i++) {
-		Node3D *spat = Object::cast_to<Node3D>(ObjectDB::get_instance(instances[i]));
-
+	for (Node3D *spat : nodes_with_gizmos) {
 		if (!spat) {
 			continue;
 		}
@@ -1046,7 +1044,7 @@ void Node3DEditorViewport::_select_region() {
 		_clear_selected();
 	}
 
-	Vector<ObjectID> instances = RenderingServer::get_singleton()->instances_cull_convex(frustum, get_tree()->get_root()->get_world_3d()->get_scenario());
+	Vector<Node3D *> nodes_with_gizmos = Node3DEditor::get_singleton()->gizmo_bvh_frustum_query(frustum);
 	HashSet<Node3D *> found_nodes;
 	Vector<Node *> selected;
 
@@ -1055,8 +1053,7 @@ void Node3DEditorViewport::_select_region() {
 		return;
 	}
 
-	for (int i = 0; i < instances.size(); i++) {
-		Node3D *sp = Object::cast_to<Node3D>(ObjectDB::get_instance(instances[i]));
+	for (Node3D *sp : nodes_with_gizmos) {
 		if (!sp || _is_node_locked(sp)) {
 			continue;
 		}
@@ -1064,21 +1061,23 @@ void Node3DEditorViewport::_select_region() {
 		if (found_nodes.has(sp)) {
 			continue;
 		}
-
 		found_nodes.insert(sp);
 
 		Node *node = Object::cast_to<Node>(sp);
-		if (node != edited_scene) {
-			node = edited_scene->get_deepest_editable_node(node);
-		}
 
-		// Prevent selection of nodes not owned by the edited scene.
-		while (node && node != edited_scene->get_parent()) {
-			Node *node_owner = node->get_owner();
-			if (node_owner == edited_scene || node == edited_scene || (node_owner != nullptr && edited_scene->is_editable_instance(node_owner))) {
-				break;
+		// Selection requires that the node is the edited scene or its descendant, and has an owner.
+		if (node != edited_scene) {
+			if (!node->get_owner() || !edited_scene->is_ancestor_of(node)) {
+				continue;
 			}
-			node = node->get_parent();
+			node = edited_scene->get_deepest_editable_node(node);
+			while (node != edited_scene) {
+				Node *node_owner = node->get_owner();
+				if (node_owner == edited_scene || (node_owner != nullptr && edited_scene->is_editable_instance(node_owner))) {
+					break;
+				}
+				node = node->get_parent();
+			}
 		}
 
 		// Replace the node by the group if grouped
@@ -1916,12 +1915,17 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 					}
 
 					if (after != EditorPlugin::AFTER_GUI_INPUT_CUSTOM) {
-						//clicking is always deferred to either move or release
-						clicked = _select_ray(b->get_position());
+						// Single item selection.
+						Vector<_RayResult> selection;
+						_find_items_at_pos(b->get_position(), selection, false);
+						if (!selection.is_empty()) {
+							clicked = selection[0].item->get_instance_id();
+						}
+
 						selection_in_progress = true;
 
 						if (clicked.is_null()) {
-							//default to regionselect
+							// Default to region select.
 							cursor.region_select = true;
 							cursor.region_begin = b->get_position();
 							cursor.region_end = b->get_position();
@@ -2252,6 +2256,11 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 		}
 
 		if (_edit.mode == TRANSFORM_NONE) {
+			if (_edit.gizmo.is_null() && is_freelook_active() && k->get_keycode() == Key::ESCAPE) {
+				set_freelook_active(false);
+				return;
+			}
+
 			if (_edit.gizmo.is_valid() && (k->get_keycode() == Key::ESCAPE || k->get_keycode() == Key::BACKSPACE)) {
 				// Restore.
 				_edit.gizmo->commit_handle(_edit.gizmo_handle, _edit.gizmo_handle_secondary, _edit.gizmo_initial_value, true);
@@ -3107,6 +3116,7 @@ void Node3DEditorViewport::_notification(int p_what) {
 		case NOTIFICATION_DRAG_END: {
 			// Clear preview material when dropped outside applicable object.
 			if (spatial_editor->get_preview_material().is_valid() && !is_drag_successful()) {
+				_reset_preview_material();
 				_remove_preview_material();
 			} else {
 				_remove_preview_node();
@@ -7315,9 +7325,9 @@ void Node3DEditor::_init_grid() {
 	int primary_grid_steps = EDITOR_GET("editors/3d/primary_grid_steps");
 
 	// Which grid planes are enabled? Which should we generate?
-	grid_enable[0] = grid_visible[0] = EDITOR_GET("editors/3d/grid_xy_plane");
-	grid_enable[1] = grid_visible[1] = EDITOR_GET("editors/3d/grid_yz_plane");
-	grid_enable[2] = grid_visible[2] = EDITOR_GET("editors/3d/grid_xz_plane");
+	grid_enable[0] = grid_visible[0] = orthogonal || EDITOR_GET("editors/3d/grid_xy_plane");
+	grid_enable[1] = grid_visible[1] = orthogonal || EDITOR_GET("editors/3d/grid_yz_plane");
+	grid_enable[2] = grid_visible[2] = orthogonal || EDITOR_GET("editors/3d/grid_xz_plane");
 
 	// Offsets division_level for bigger or smaller grids.
 	// Default value is -0.2. -1.0 gives Blender-like behavior, 0.5 gives huge grids.
@@ -9221,6 +9231,49 @@ void Node3DEditor::remove_gizmo_plugin(Ref<EditorNode3DGizmoPlugin> p_plugin) {
 	gizmo_plugins_by_priority.erase(p_plugin);
 	gizmo_plugins_by_name.erase(p_plugin);
 	_update_gizmos_menu();
+}
+
+DynamicBVH::ID Node3DEditor::insert_gizmo_bvh_node(Node3D *p_node, const AABB &p_aabb) {
+	return gizmo_bvh.insert(p_aabb, p_node);
+}
+
+void Node3DEditor::update_gizmo_bvh_node(DynamicBVH::ID p_id, const AABB &p_aabb) {
+	gizmo_bvh.update(p_id, p_aabb);
+	gizmo_bvh.optimize_incremental(1);
+}
+
+void Node3DEditor::remove_gizmo_bvh_node(DynamicBVH::ID p_id) {
+	gizmo_bvh.remove(p_id);
+}
+
+Vector<Node3D *> Node3DEditor::gizmo_bvh_ray_query(const Vector3 &p_ray_start, const Vector3 &p_ray_end) {
+	struct Result {
+		Vector<Node3D *> nodes;
+		bool operator()(void *p_data) {
+			nodes.append((Node3D *)p_data);
+			return false;
+		}
+	} result;
+
+	gizmo_bvh.ray_query(p_ray_start, p_ray_end, result);
+
+	return result.nodes;
+}
+
+Vector<Node3D *> Node3DEditor::gizmo_bvh_frustum_query(const Vector<Plane> &p_frustum) {
+	Vector<Vector3> points = Geometry3D::compute_convex_mesh_points(&p_frustum[0], p_frustum.size());
+
+	struct Result {
+		Vector<Node3D *> nodes;
+		bool operator()(void *p_data) {
+			nodes.append((Node3D *)p_data);
+			return false;
+		}
+	} result;
+
+	gizmo_bvh.convex_query(p_frustum.ptr(), p_frustum.size(), points.ptr(), points.size(), result);
+
+	return result.nodes;
 }
 
 Node3DEditorPlugin::Node3DEditorPlugin() {
