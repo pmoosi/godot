@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  FileErrors.kt                                                         */
+/*  regex.compat.inc                                                      */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,26 +28,19 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-package org.godotengine.godot.io.file
+#ifndef DISABLE_DEPRECATED
 
-/**
- * Set of errors that may occur when performing data access.
- */
-internal enum class FileErrors(val nativeValue: Int) {
-	OK(0),
-	FAILED(-1),
-	FILE_NOT_FOUND(-2),
-	FILE_CANT_OPEN(-3),
-	INVALID_PARAMETER(-4);
-
-	companion object {
-		fun fromNativeError(error: Int): FileErrors? {
-			for (fileError in entries) {
-				if (fileError.nativeValue == error) {
-					return fileError
-				}
-			}
-			return null
-		}
-	}
+Ref<RegEx> RegEx::_create_from_string_bind_compat_95212(const String &p_pattern) {
+	return create_from_string(p_pattern, true);
 }
+
+Error RegEx::_compile_bind_compat_95212(const String &p_pattern) {
+	return compile(p_pattern, true);
+}
+
+void RegEx::_bind_compatibility_methods() {
+	ClassDB::bind_compatibility_static_method("RegEx", D_METHOD("create_from_string", "pattern"), &RegEx::_create_from_string_bind_compat_95212);
+	ClassDB::bind_compatibility_method(D_METHOD("compile", "pattern"), &RegEx::_compile_bind_compat_95212);
+}
+
+#endif

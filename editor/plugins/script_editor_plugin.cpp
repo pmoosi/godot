@@ -493,7 +493,7 @@ void ScriptEditor::_goto_script_line(Ref<RefCounted> p_script, int p_line) {
 			if (ScriptTextEditor *script_text_editor = Object::cast_to<ScriptTextEditor>(current)) {
 				script_text_editor->goto_line_centered(p_line);
 			} else if (current) {
-				current->goto_line(p_line, true);
+				current->goto_line(p_line);
 			}
 
 			_save_history();
@@ -1079,8 +1079,12 @@ void ScriptEditor::_mark_built_in_scripts_as_saved(const String &p_parent_path) 
 		}
 
 		Ref<Script> scr = edited_res;
-		if (scr.is_valid() && scr->is_tool()) {
-			scr->reload(true);
+		if (scr.is_valid()) {
+			trigger_live_script_reload(scr->get_path());
+
+			if (scr->is_tool()) {
+				scr->reload(true);
+			}
 		}
 	}
 }
@@ -1857,17 +1861,13 @@ void ScriptEditor::get_breakpoints(List<String> *p_breakpoints) {
 }
 
 void ScriptEditor::_members_overview_selected(int p_idx) {
-	ScriptEditorBase *se = _get_current_editor();
-	if (!se) {
-		return;
+	int line = members_overview->get_item_metadata(p_idx);
+	ScriptEditorBase *current = _get_current_editor();
+	if (ScriptTextEditor *script_text_editor = Object::cast_to<ScriptTextEditor>(current)) {
+		script_text_editor->goto_line_centered(line);
+	} else if (current) {
+		current->goto_line(line);
 	}
-	// Go to the member's line and reset the cursor column. We can't change scroll_position
-	// directly until we have gone to the line first, since code might be folded.
-	se->goto_line(members_overview->get_item_metadata(p_idx));
-	Dictionary state = se->get_edit_state();
-	state["column"] = 0;
-	state["scroll_position"] = members_overview->get_item_metadata(p_idx);
-	se->set_edit_state(state);
 }
 
 void ScriptEditor::_help_overview_selected(int p_idx) {
@@ -2711,9 +2711,11 @@ void ScriptEditor::apply_scripts() const {
 }
 
 void ScriptEditor::reload_scripts(bool p_refresh_only) {
-	if (external_editor_active) {
-		return;
-	}
+	// Call deferred to make sure it runs on the main thread.
+	callable_mp(this, &ScriptEditor::_reload_scripts).call_deferred(p_refresh_only);
+}
+
+void ScriptEditor::_reload_scripts(bool p_refresh_only) {
 	for (int i = 0; i < tab_container->get_tab_count(); i++) {
 		ScriptEditorBase *se = Object::cast_to<ScriptEditorBase>(tab_container->get_tab_control(i));
 		if (!se) {
@@ -4061,7 +4063,7 @@ ScriptEditor::ScriptEditor(WindowWrapper *p_wrapper) {
 	members_overview_alphabeta_sort_button->set_tooltip_text(TTR("Toggle alphabetical sorting of the method list."));
 	members_overview_alphabeta_sort_button->set_toggle_mode(true);
 	members_overview_alphabeta_sort_button->set_pressed(EDITOR_GET("text_editor/script_list/sort_members_outline_alphabetically"));
-	members_overview_alphabeta_sort_button->connect("toggled", callable_mp(this, &ScriptEditor::_toggle_members_overview_alpha_sort));
+	members_overview_alphabeta_sort_button->connect(SceneStringName(toggled), callable_mp(this, &ScriptEditor::_toggle_members_overview_alpha_sort));
 
 	buttons_hbox->add_child(members_overview_alphabeta_sort_button);
 
@@ -4415,13 +4417,9 @@ bool ScriptEditorPlugin::handles(Object *p_object) const {
 void ScriptEditorPlugin::make_visible(bool p_visible) {
 	if (p_visible) {
 		window_wrapper->show();
-		script_editor->set_process(true);
 		script_editor->ensure_select_current();
 	} else {
 		window_wrapper->hide();
-		if (!window_wrapper->get_window_enabled()) {
-			script_editor->set_process(false);
-		}
 	}
 }
 
