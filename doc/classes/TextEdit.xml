@@ -124,7 +124,6 @@
 			<return type="void" />
 			<description>
 				Starts an edit for multiple carets. The edit must be ended with [method end_multicaret_edit]. Multicaret edits can be used to edit text at multiple carets and delay merging the carets until the end, so the caret indexes aren't affected immediately. [method begin_multicaret_edit] and [method end_multicaret_edit] can be nested, and the merge will happen at the last [method end_multicaret_edit].
-				Example usage:
 				[codeblock]
 				begin_complex_operation()
 				begin_multicaret_edit()
@@ -764,7 +763,8 @@
 			<return type="bool" />
 			<param index="0" name="caret_index" type="int" default="0" />
 			<description>
-				Returns [code]true[/code] if the caret is visible on the screen.
+				Returns [code]true[/code] if the caret is visible, [code]false[/code] otherwise. A caret will be considered hidden if it is outside the scrollable area when scrolling is enabled.
+				[b]Note:[/b] [method is_caret_visible] does not account for a caret being off-screen if it is still within the scrollable area. It will return [code]true[/code] even if the caret is off-screen as long as it meets [TextEdit]'s own conditions for being visible. This includes uses of [member scroll_fit_content_width] and [member scroll_fit_content_height] that cause the [TextEdit] to expand beyond the viewport's bounds.
 			</description>
 		</method>
 		<method name="is_dragging_cursor" qualifiers="const">
@@ -1624,7 +1624,7 @@
 			The caret's width in pixels. Greater values can be used to improve accessibility by ensuring the caret is easily visible, or to ensure consistency with a large font size. If set to [code]0[/code] or lower, the caret width is automatically set to 1 pixel and multiplied by the display scaling factor.
 		</theme_item>
 		<theme_item name="line_spacing" data_type="constant" type="int" default="4">
-			Sets the spacing between the lines.
+			Additional vertical spacing between lines (in pixels), spacing is added to line descent. This value can be negative.
 		</theme_item>
 		<theme_item name="outline_size" data_type="constant" type="int" default="0">
 			The size of the text outline.
