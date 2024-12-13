@@ -4047,7 +4047,11 @@ void EditorInspector::_edit_set(const String &p_name, const Variant &p_value, bo
 		bool valid = false;
 		Variant value = object->get(p_name, &valid);
 		if (valid) {
-			undo_redo->add_undo_property(object, p_name, value);
+			if (Object::cast_to<Control>(object) && (p_name == "anchors_preset" || p_name == "layout_mode")) {
+				undo_redo->add_undo_method(object, "_edit_set_state", Object::cast_to<Control>(object)->_edit_get_state());
+			} else {
+				undo_redo->add_undo_property(object, p_name, value);
+			}
 		}
 
 		List<StringName> linked_properties;
@@ -4455,6 +4459,7 @@ void EditorInspector::_notification(int p_what) {
 		} break;
 
 		case NOTIFICATION_READY: {
+			ERR_FAIL_NULL(EditorFeatureProfileManager::get_singleton());
 			EditorFeatureProfileManager::get_singleton()->connect("current_feature_profile_changed", callable_mp(this, &EditorInspector::_feature_profile_changed));
 			set_process(is_visible_in_tree());
 			add_theme_style_override(SceneStringName(panel), get_theme_stylebox(SceneStringName(panel), SNAME("Tree")));

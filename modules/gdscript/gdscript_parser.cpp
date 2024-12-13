@@ -1073,8 +1073,8 @@ void GDScriptParser::parse_class_body(bool p_is_multiline) {
 			default:
 				// Display a completion with identifiers.
 				make_completion_context(COMPLETION_IDENTIFIER, nullptr);
-				push_error(vformat(R"(Unexpected "%s" in class body.)", current.get_name()));
 				advance();
+				push_error(vformat(R"(Unexpected %s in class body.)", previous.get_debug_name()));
 				break;
 		}
 		if (token.type != GDScriptTokenizer::Token::STATIC) {
@@ -1637,7 +1637,15 @@ GDScriptParser::AnnotationNode *GDScriptParser::parse_annotation(uint32_t p_vali
 	bool valid = true;
 
 	if (!valid_annotations.has(annotation->name)) {
-		push_error(vformat(R"(Unrecognized annotation: "%s".)", annotation->name));
+		if (annotation->name == "@deprecated") {
+			push_error(R"("@deprecated" annotation does not exist. Use "## @deprecated: Reason here." instead.)");
+		} else if (annotation->name == "@experimental") {
+			push_error(R"("@experimental" annotation does not exist. Use "## @experimental: Reason here." instead.)");
+		} else if (annotation->name == "@tutorial") {
+			push_error(R"("@tutorial" annotation does not exist. Use "## @tutorial(Title): https://example.com" instead.)");
+		} else {
+			push_error(vformat(R"(Unrecognized annotation: "%s".)", annotation->name));
+		}
 		valid = false;
 	}
 
