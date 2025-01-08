@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  joypad_macos.h                                                        */
+/*  particles_3d_emission_shape_gizmo_plugin.h                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,62 +28,30 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "core/input/input.h"
+#ifndef PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H
+#define PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H
 
-#define Key _QKey
-#import <CoreHaptics/CoreHaptics.h>
-#import <GameController/GameController.h>
-#undef Key
+#include "editor/plugins/gizmos/gizmo_3d_helper.h"
+#include "editor/plugins/node_3d_editor_gizmos.h"
 
-@interface JoypadMacOSObserver : NSObject
+class Particles3DEmissionShapeGizmoPlugin : public EditorNode3DGizmoPlugin {
+	GDCLASS(Particles3DEmissionShapeGizmoPlugin, EditorNode3DGizmoPlugin);
 
-- (void)startObserving;
-- (void)startProcessing;
-- (void)finishObserving;
-
-@end
-
-API_AVAILABLE(macosx(11))
-@interface RumbleMotor : NSObject
-@property(strong, nonatomic) CHHapticEngine *engine;
-@property(strong, nonatomic) id<CHHapticPatternPlayer> player;
-@end
-
-API_AVAILABLE(macosx(11))
-@interface RumbleContext : NSObject
-// High frequency motor, it's usually the right engine.
-@property(strong, nonatomic) RumbleMotor *weak_motor;
-// Low frequency motor, it's usually the left engine.
-@property(strong, nonatomic) RumbleMotor *strong_motor;
-@end
-
-// Controller support for macOS begins with macOS 10.9+,
-// however haptics (vibrations) are only supported in macOS 11+.
-@interface Joypad : NSObject
-
-@property(assign, nonatomic) BOOL force_feedback;
-@property(assign, nonatomic) NSInteger ff_effect_timestamp;
-@property(strong, nonatomic) GCController *controller;
-@property(strong, nonatomic) RumbleContext *rumble_context API_AVAILABLE(macosx(11));
-
-- (instancetype)init;
-- (instancetype)init:(GCController *)controller;
-
-@end
-
-class JoypadMacOS {
-private:
-	JoypadMacOSObserver *observer;
+	Ref<Gizmo3DHelper> helper;
 
 public:
-	JoypadMacOS();
-	~JoypadMacOS();
+	bool has_gizmo(Node3D *p_spatial) override;
+	String get_gizmo_name() const override;
+	int get_priority() const override;
+	bool is_selectable_when_hidden() const override;
+	void redraw(EditorNode3DGizmo *p_gizmo) override;
 
-	API_AVAILABLE(macosx(11))
-	void joypad_vibration_start(Joypad *p_joypad, float p_weak_magnitude, float p_strong_magnitude, float p_duration, uint64_t p_timestamp);
-	API_AVAILABLE(macosx(11))
-	void joypad_vibration_stop(Joypad *p_joypad, uint64_t p_timestamp);
+	String get_handle_name(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
+	Variant get_handle_value(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
+	void set_handle(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary, Camera3D *p_camera, const Point2 &p_point) override;
+	void commit_handle(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary, const Variant &p_restore, bool p_cancel = false) override;
 
-	void start_processing();
-	void process_joypads();
+	Particles3DEmissionShapeGizmoPlugin();
 };
+
+#endif // PARTICLES_3D_EMISSION_SHAPE_GIZMO_PLUGIN_H
