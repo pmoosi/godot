@@ -157,6 +157,7 @@ public:
 		PROJECT_OPEN_SETTINGS,
 		PROJECT_VERSION_CONTROL,
 		PROJECT_EXPORT,
+		PROJECT_PACK_AS_ZIP,
 		PROJECT_INSTALL_ANDROID_SOURCE,
 		PROJECT_OPEN_USER_DATA_FOLDER,
 		PROJECT_RELOAD_CURRENT_PROJECT,
@@ -591,6 +592,7 @@ private:
 
 	void _exit_editor(int p_exit_code);
 
+	virtual void input(const Ref<InputEvent> &p_event) override;
 	virtual void shortcut_input(const Ref<InputEvent> &p_event) override;
 
 	bool has_main_screen() const { return true; }

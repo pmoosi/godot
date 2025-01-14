@@ -1099,7 +1099,7 @@ void RenderForwardMobile::_render_scene(RenderDataRD *p_render_data, const Color
 			}
 		}
 
-		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(framebuffer, load_color ? RD::DRAW_CLEAR_DEPTH : (RD::DRAW_CLEAR_COLOR_0 | RD::DRAW_CLEAR_DEPTH), c, 0.0f, 0, Rect2(), breadcrumb);
+		RD::DrawListID draw_list = RD::get_singleton()->draw_list_begin(framebuffer, load_color ? RD::DRAW_CLEAR_DEPTH : (RD::DRAW_CLEAR_COLOR_0 | RD::DRAW_CLEAR_DEPTH), c, 0.0f, 0, p_render_data->render_region, breadcrumb);
 		RD::FramebufferFormatID fb_format = RD::get_singleton()->framebuffer_get_format(framebuffer);
 
 		if (copy_canvas) {
@@ -1196,7 +1196,7 @@ void RenderForwardMobile::_render_scene(RenderDataRD *p_render_data, const Color
 				render_list_params.framebuffer_format = fb_format;
 				render_list_params.subpass = RD::get_singleton()->draw_list_get_current_pass(); // Should now always be 0.
 
-				draw_list = RD::get_singleton()->draw_list_begin(framebuffer, RD::DRAW_DEFAULT_ALL, Vector<Color>(), 1.0f, 0, Rect2(), breadcrumb);
+				draw_list = RD::get_singleton()->draw_list_begin(framebuffer, RD::DRAW_DEFAULT_ALL, Vector<Color>(), 1.0f, 0, p_render_data->render_region, breadcrumb);
 				_render_list(draw_list, fb_format, &render_list_params, 0, render_list_params.element_count);
 				RD::get_singleton()->draw_list_end();
 
@@ -2380,7 +2380,11 @@ void RenderForwardMobile::_render_list_template(RenderingDevice::DrawListID p_dr
 				instance_count /= surf->owner->trail_steps;
 			}
 
-			RD::get_singleton()->draw_list_draw(draw_list, index_array_rd.is_valid(), instance_count);
+			if (bool(surf->owner->base_flags & INSTANCE_DATA_FLAG_MULTIMESH_INDIRECT)) {
+				RD::get_singleton()->draw_list_draw_indirect(draw_list, index_array_rd.is_valid(), mesh_storage->_multimesh_get_command_buffer_rd_rid(surf->owner->data->base), surf->surface_index * sizeof(uint32_t) * mesh_storage->INDIRECT_MULTIMESH_COMMAND_STRIDE, 1, 0);
+			} else {
+				RD::get_singleton()->draw_list_draw(draw_list, index_array_rd.is_valid(), instance_count);
+			}
 		}
 	}
 
@@ -2801,6 +2805,7 @@ void RenderForwardMobile::_geometry_instance_update(RenderGeometryInstance *p_ge
 
 	if (ginstance->data->base_type == RS::INSTANCE_MULTIMESH) {
 		ginstance->base_flags |= INSTANCE_DATA_FLAG_MULTIMESH;
+
 		if (mesh_storage->multimesh_get_transform_format(ginstance->data->base) == RS::MULTIMESH_TRANSFORM_2D) {
 			ginstance->base_flags |= INSTANCE_DATA_FLAG_MULTIMESH_FORMAT_2D;
 		}
@@ -2809,6 +2814,9 @@ void RenderForwardMobile::_geometry_instance_update(RenderGeometryInstance *p_ge
 		}
 		if (mesh_storage->multimesh_uses_custom_data(ginstance->data->base)) {
 			ginstance->base_flags |= INSTANCE_DATA_FLAG_MULTIMESH_HAS_CUSTOM_DATA;
+		}
+		if (mesh_storage->multimesh_uses_indirect(ginstance->data->base)) {
+			ginstance->base_flags |= INSTANCE_DATA_FLAG_MULTIMESH_INDIRECT;
 		}
 
 		ginstance->transforms_uniform_set = mesh_storage->multimesh_get_3d_uniform_set(ginstance->data->base, scene_shader.default_shader_rd, TRANSFORMS_UNIFORM_SET);
