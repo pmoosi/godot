@@ -386,7 +386,9 @@
 			[b]Note:[/b] If the operating system blocks access to audio input devices (due to the user's privacy settings), audio capture will only return silence. On Windows 10 and later, make sure that apps are allowed to access the microphone in the OS' privacy settings.
 		</member>
 		<member name="audio/driver/mix_rate" type="int" setter="" getter="" default="44100">
-			The mixing rate used for audio (in Hz). In general, it's better to not touch this and leave it to the host operating system.
+			Target mixing rate used for audio (in Hz). In general, it's better to not touch this and leave it to the host operating system.
+			[b]Note:[/b] On iOS and macOS, mixing rate is determined by audio driver, this value is ignored.
+			[b]Note:[/b] Input and output mixing rates might be different. Use [method AudioServer.get_mix_rate] and [method AudioServer.get_input_mix_rate] to get actual values.
 		</member>
 		<member name="audio/driver/mix_rate.web" type="int" setter="" getter="" default="0">
 			Safer override for [member audio/driver/mix_rate] in the Web platform. Here [code]0[/code] means "let the browser choose" (since some browsers do not like forcing the mix rate).
@@ -2735,17 +2737,21 @@
 			The VoxelGI quality to use. High quality leads to more precise lighting and better reflections, but is slower to render. This setting does not affect the baked data and doesn't require baking the [VoxelGI] again to apply.
 			[b]Note:[/b] This property is only read when the project starts. To control VoxelGI quality at runtime, call [method RenderingServer.voxel_gi_set_quality] instead.
 		</member>
-		<member name="rendering/lightmapping/bake_performance/max_rays_per_pass" type="int" setter="" getter="" default="32">
+		<member name="rendering/lightmapping/bake_performance/max_rays_per_pass" type="int" setter="" getter="" default="4">
 			The maximum number of rays that can be thrown per pass when baking lightmaps with [LightmapGI]. Depending on the scene, adjusting this value may result in higher GPU utilization when baking lightmaps, leading to faster bake times.
+			[b]Note:[/b] Using a value that is too high for your system can cause crashes due to the GPU being unresponsive for long periods of time, and the graphics driver being reset by the OS.
 		</member>
 		<member name="rendering/lightmapping/bake_performance/max_rays_per_probe_pass" type="int" setter="" getter="" default="64">
 			The maximum number of rays that can be thrown per pass when baking dynamic object lighting in [LightmapProbe]s with [LightmapGI]. Depending on the scene, adjusting this value may result in higher GPU utilization when baking lightmaps, leading to faster bake times.
+			[b]Note:[/b] Using a value that is too high for your system can cause crashes due to the GPU being unresponsive for long periods of time, and the graphics driver being reset by the OS.
 		</member>
 		<member name="rendering/lightmapping/bake_performance/max_transparency_rays" type="int" setter="" getter="" default="8">
 			The maximum number of retry rays that can be thrown per pass when hitting a transparent surface when baking lightmaps with [LightmapGI]. Depending on the scene, reducing this value may lead to faster bake times.
+			[b]Note:[/b] Using a value that is too high for your system can cause crashes due to the GPU being unresponsive for long periods of time, and the graphics driver being reset by the OS.
 		</member>
 		<member name="rendering/lightmapping/bake_performance/region_size" type="int" setter="" getter="" default="512">
-			The region size to use when baking lightmaps with [LightmapGI].
+			The region size to use when baking lightmaps with [LightmapGI]. The specified value is rounded up to the nearest power of 2.
+			[b]Note:[/b] Using a value that is too high for your system can cause crashes due to the GPU being unresponsive for long periods of time, and the graphics driver being reset by the OS.
 		</member>
 		<member name="rendering/lightmapping/bake_quality/high_quality_probe_ray_count" type="int" setter="" getter="" default="512">
 			The number of rays to use for baking dynamic object lighting in [LightmapProbe]s when [member LightmapGI.quality] is [constant LightmapGI.BAKE_QUALITY_HIGH].
@@ -2978,8 +2984,8 @@
 			[b]Note:[/b] This setting is implemented only on Windows, Android, macOS, iOS, and Linux/X11.
 		</member>
 		<member name="rendering/rendering_device/fallback_to_vulkan" type="bool" setter="" getter="" default="true">
-			If [code]true[/code], the forward renderer will fall back to Vulkan if Direct3D 12 is not supported.
-			[b]Note:[/b] This setting is implemented only on Windows.
+			If [code]true[/code], the forward renderer will fall back to Vulkan if Direct3D 12 (on Windows) or Metal (on macOS x86_64) are not supported.
+			[b]Note:[/b] This setting is implemented only on Windows and macOS.
 		</member>
 		<member name="rendering/rendering_device/pipeline_cache/enable" type="bool" setter="" getter="" default="true">
 			Enable the pipeline cache that is saved to disk if the graphics API supports it.
