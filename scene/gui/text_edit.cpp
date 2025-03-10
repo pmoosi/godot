@@ -7337,7 +7337,7 @@ void TextEdit::_paste_internal(int p_caret) {
 	}
 
 	// Paste a full line. Ignore '\r' characters that may have been added to the clipboard by the OS.
-	if (get_caret_count() == 1 && !has_selection(0) && !cut_copy_line.is_empty() && cut_copy_line == clipboard.replace("\r", "")) {
+	if (get_caret_count() == 1 && !has_selection(0) && !cut_copy_line.is_empty() && cut_copy_line == clipboard.remove_char('\r')) {
 		insert_text(clipboard, get_caret_line(), 0);
 		return;
 	}
@@ -8584,7 +8584,7 @@ void TextEdit::_base_insert_text(int p_line, int p_char, const String &p_text, i
 	ERR_FAIL_COND(p_char < 0);
 
 	/* STEP 1: Remove \r from source text and separate in substrings. */
-	const String text_to_insert = p_text.replace("\r", "");
+	const String text_to_insert = p_text.remove_char('\r');
 	Vector<String> substrings = text_to_insert.split("\n");
 
 	// Is this just a new empty line?
@@ -8596,7 +8596,7 @@ void TextEdit::_base_insert_text(int p_line, int p_char, const String &p_text, i
 	}
 
 	/* STEP 3: Separate dest string in pre and post text. */
-	String postinsert_text = text[p_line].substr(p_char, text[p_line].size());
+	String postinsert_text = text[p_line].substr(p_char);
 
 	substrings.write[0] = text[p_line].substr(0, p_char) + substrings[0];
 	substrings.write[substrings.size() - 1] += postinsert_text;
@@ -8660,7 +8660,7 @@ void TextEdit::_base_remove_text(int p_from_line, int p_from_column, int p_to_li
 	ERR_FAIL_COND(p_to_line == p_from_line && p_to_column < p_from_column); // 'from > to'.
 
 	String pre_text = text[p_from_line].substr(0, p_from_column);
-	String post_text = text[p_to_line].substr(p_to_column, text[p_to_line].length());
+	String post_text = text[p_to_line].substr(p_to_column);
 
 	text.remove_range(p_from_line, p_to_line);
 	text.set(p_from_line, pre_text + post_text, structured_text_parser(st_parser, st_args, pre_text + post_text));
