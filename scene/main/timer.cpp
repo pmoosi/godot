@@ -234,7 +234,7 @@ void Timer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_ignoring_time_scale"), &Timer::is_ignoring_time_scale);
 
 	ClassDB::bind_method(D_METHOD("set_time_scale", "ignore"), &Timer::set_time_scale);
-	ClassDB::bind_method(D_METHOD("is_time_scale"), &Timer::get_time_scale);
+	ClassDB::bind_method(D_METHOD("get_time_scale"), &Timer::get_time_scale);
 
 	ClassDB::bind_method(D_METHOD("is_stopped"), &Timer::is_stopped);
 
