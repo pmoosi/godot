@@ -49,8 +49,7 @@
 			If [code]true[/code], the timer will ignore [member Engine.time_scale] and update with the real, elapsed time.
 		</member>
 		<member name="time_scale" type="float" setter="set_time_scale" getter="get_time_scale" default="1.0">
-			The wait-time scaling ratio. For example, if this value is [code]1[/code] the timers wait time is normal.
-            If set to [code]0.5[/code] the wait time is doubled. If it's [code]2[/code] the wait time is halved.
+			The time scaling ratio. For example, if this value is [code]1[/code] the time elapses in real-time. If set to [code]0.5[/code] the elapsed-time is halved. If it's [code]2[/code] the elapsed time is doubled.
 		</member>
 		<member name="one_shot" type="bool" setter="set_one_shot" getter="is_one_shot" default="false">
 			If [code]true[/code], the timer will stop after reaching the end. Otherwise, as by default, the timer will automatically restart.
