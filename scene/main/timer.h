@@ -41,6 +41,7 @@ class Timer : public Node {
 	bool processing = false;
 	bool paused = false;
 	bool ignore_time_scale = false;
+	double time_scale = 1.0;
 
 	double time_left = -1.0;
 
@@ -71,6 +72,9 @@ public:
 
 	void set_ignore_time_scale(bool p_ignore);
 	bool is_ignoring_time_scale();
+
+	void set_time_scale(double p_time_scale);
+	double get_time_scale() const;
 
 	bool is_stopped() const;
 
