@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  editor_debugger_tree.h                                                */
+/*  camera_2d_editor_plugin.h                                             */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,75 +30,51 @@
 
 #pragma once
 
-#include "scene/gui/tree.h"
+#include "editor/plugins/editor_plugin.h"
 
-class AcceptDialog;
-class SceneDebuggerTree;
-class EditorFileDialog;
+class Camera2D;
+class Label;
+class MenuButton;
 
-class EditorDebuggerTree : public Tree {
-	GDCLASS(EditorDebuggerTree, Tree);
+class Camera2DEditor : public Control {
+	GDCLASS(Camera2DEditor, Control);
 
-private:
-	struct ParentItem {
-		TreeItem *tree_item;
-		int child_count;
-		bool matches_filter;
-
-		ParentItem(TreeItem *p_tree_item = nullptr, int p_child_count = 0, bool p_matches_filter = false) {
-			tree_item = p_tree_item;
-			child_count = p_child_count;
-			matches_filter = p_matches_filter;
-		}
+	enum Menu {
+		MENU_SNAP_LIMITS_TO_VIEWPORT,
 	};
 
-	enum ItemMenu {
-		ITEM_MENU_SAVE_REMOTE_NODE,
-		ITEM_MENU_COPY_NODE_PATH,
-		ITEM_MENU_EXPAND_COLLAPSE,
-	};
+	Camera2D *selected_camera = nullptr;
 
-	TypedArray<uint64_t> inspected_object_ids;
-	int debugger_id = 0;
-	bool updating_scene_tree = false;
-	bool scrolling_to_item = false;
-	bool notify_selection_queued = false;
-	bool selection_surpassed_limit = false;
-	bool selection_uncollapse_all = false;
-	HashSet<ObjectID> unfold_cache;
-	PopupMenu *item_menu = nullptr;
-	EditorFileDialog *file_dialog = nullptr;
-	AcceptDialog *accept = nullptr;
-	String last_filter;
+	friend class Camera2DEditorPlugin;
+	MenuButton *options = nullptr;
 
-	void _scene_tree_folded(Object *p_obj);
-	void _scene_tree_selection_changed(TreeItem *p_item, int p_column, bool p_selected);
-	void _scene_tree_nothing_selected();
-	void _notify_selection_changed();
-	void _scene_tree_rmb_selected(const Vector2 &p_position, MouseButton p_button);
-	void _item_menu_id_pressed(int p_option);
-	void _file_selected(const String &p_file);
+	void _menu_option(int p_option);
+	void _snap_limits_to_viewport();
+	void _undo_snap_limits_to_viewport(const Rect2 &p_prev_rect);
 
 protected:
 	static void _bind_methods();
 	void _notification(int p_what);
 
 public:
-	enum Button {
-		BUTTON_SUBSCENE = 0,
-		BUTTON_VISIBILITY = 1,
-	};
+	void edit(Camera2D *p_camera);
+	Camera2DEditor();
+};
 
-	virtual Variant get_drag_data(const Point2 &p_point) override;
+class Camera2DEditorPlugin : public EditorPlugin {
+	GDCLASS(Camera2DEditorPlugin, EditorPlugin);
 
-	void update_icon_max_width();
-	String get_selected_path();
-	ObjectID get_selected_object();
-	int get_current_debugger(); // Would love to have one tree for every debugger.
-	inline TypedArray<uint64_t> get_selection() const { return inspected_object_ids.duplicate(); }
-	void update_scene_tree(const SceneDebuggerTree *p_tree, int p_debugger);
-	void select_nodes(const TypedArray<int64_t> &p_ids);
-	void clear_selection();
+	Camera2DEditor *camera_2d_editor = nullptr;
 
-	EditorDebuggerTree();
+	Label *approach_to_move_rect = nullptr;
+
+	void _editor_theme_changed();
+	void _update_approach_text_visibility();
+
+public:
+	virtual void edit(Object *p_object) override;
+	virtual bool handles(Object *p_object) const override;
+	virtual void make_visible(bool p_visible) override;
+
+	Camera2DEditorPlugin();
 };
