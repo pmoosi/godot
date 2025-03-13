@@ -643,6 +643,8 @@ private:
 	bool internal_stack_editing = false;
 	bool stack_externally_modified = false;
 
+	bool ignore_time_scale = false;
+
 	bool fit_content = false;
 
 	struct ThemeCache {
@@ -822,6 +824,9 @@ public:
 
 	void set_progress_bar_delay(int p_delay_ms);
 	int get_progress_bar_delay() const;
+
+	void set_ignore_time_scale(bool p_ignore);
+	bool is_ignoring_time_scale() const;
 
 	// Context menu.
 	PopupMenu *get_menu() const;
