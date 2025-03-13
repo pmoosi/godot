@@ -658,6 +658,9 @@
 		</method>
 	</methods>
 	<members>
+		<member name="ignore_time_scale" type="bool" setter="set_ignore_time_scale" getter="is_ignoring_time_scale" default="false">
+			If [code]true[/code], the rich-text label will ignore [member Engine.time_scale] and update its effect in real-time.
+		</member>
 		<member name="autowrap_mode" type="int" setter="set_autowrap_mode" getter="get_autowrap_mode" enum="TextServer.AutowrapMode" default="3">
 			If set to something other than [constant TextServer.AUTOWRAP_OFF], the text gets wrapped inside the node's bounding rectangle. To see how each mode behaves, see [enum TextServer.AutowrapMode].
 		</member>

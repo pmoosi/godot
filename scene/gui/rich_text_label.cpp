@@ -2502,7 +2502,7 @@ void RichTextLabel::_notification(int p_what) {
 				if (!is_finished()) {
 					return;
 				}
-				double dt = get_process_delta_time();
+				double dt = ignore_time_scale ? Engine::get_singleton()->get_process_step() : get_process_delta_time();
 				_update_fx(main, dt);
 				queue_redraw();
 			}
@@ -6782,6 +6782,14 @@ String RichTextLabel::get_text() const {
 	return text;
 }
 
+void RichTextLabel::set_ignore_time_scale(bool p_ignore) {
+	ignore_time_scale = p_ignore;
+}
+
+bool RichTextLabel::is_ignoring_time_scale() const {
+	return ignore_time_scale;
+}
+
 void RichTextLabel::set_use_bbcode(bool p_enable) {
 	if (use_bbcode == p_enable) {
 		return;
@@ -7277,6 +7285,9 @@ void RichTextLabel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_character_paragraph", "character"), &RichTextLabel::get_character_paragraph);
 	ClassDB::bind_method(D_METHOD("get_total_character_count"), &RichTextLabel::get_total_character_count);
 
+	ClassDB::bind_method(D_METHOD("set_ignore_time_scale", "ignore"), &RichTextLabel::set_ignore_time_scale);
+	ClassDB::bind_method(D_METHOD("is_ignoring_time_scale"), &RichTextLabel::is_ignoring_time_scale);
+
 	ClassDB::bind_method(D_METHOD("set_use_bbcode", "enable"), &RichTextLabel::set_use_bbcode);
 	ClassDB::bind_method(D_METHOD("is_using_bbcode"), &RichTextLabel::is_using_bbcode);
 
@@ -7306,6 +7317,8 @@ void RichTextLabel::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_menu"), &RichTextLabel::get_menu);
 	ClassDB::bind_method(D_METHOD("is_menu_visible"), &RichTextLabel::is_menu_visible);
 	ClassDB::bind_method(D_METHOD("menu_option", "option"), &RichTextLabel::menu_option);
+
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_time_scale"), "set_ignore_time_scale", "is_ignoring_time_scale");
 
 	// Note: set "bbcode_enabled" first, to avoid unnecessary "text" resets.
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "bbcode_enabled"), "set_use_bbcode", "is_using_bbcode");

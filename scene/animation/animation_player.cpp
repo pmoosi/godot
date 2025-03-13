@@ -313,7 +313,7 @@ bool AnimationPlayer::_blend_pre_process(double p_delta, int p_track_count, cons
 		playback.started = false;
 	}
 
-	const double delta = ignore_time_scale ? p_delta : Engine::get_singleton()->get_process_step();
+	const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : p_delta;
 
 	AnimationData *prev_from = playback.current.from;
 	_blend_playback_data(delta, started);
@@ -326,7 +326,7 @@ bool AnimationPlayer::_blend_pre_process(double p_delta, int p_track_count, cons
 }
 
 void AnimationPlayer::_blend_capture(double p_delta) {
-	const double delta = ignore_time_scale ? p_delta : Engine::get_singleton()->get_process_step();
+	const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : p_delta;
 	blend_capture(delta * Math::abs(speed_scale));
 }
 
