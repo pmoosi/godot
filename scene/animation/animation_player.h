@@ -53,6 +53,7 @@ private:
 	AHashMap<StringName, StringName> animation_next_set; // For auto advance.
 
 	float speed_scale = 1.0;
+	bool ignore_time_scale = false;
 	double default_blend_time = 0.0;
 
 	bool auto_capture = true;
@@ -213,6 +214,8 @@ public:
 
 	void set_speed_scale(float p_speed);
 	float get_speed_scale() const;
+	void set_ignore_time_scale(bool p_ignore);
+	bool is_ignoring_time_scale();
 	float get_playing_speed() const;
 
 	void set_autoplay(const String &p_name);

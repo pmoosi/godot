@@ -321,6 +321,9 @@
 			The speed scaling ratio. For example, if this value is [code]1[/code], then the animation plays at normal speed. If it's [code]0.5[/code], then it plays at half speed. If it's [code]2[/code], then it plays at double speed.
 			If set to a negative value, the animation is played in reverse. If set to [code]0[/code], the animation will not advance.
 		</member>
+		<member name="ignore_time_scale" type="bool" setter="set_ignore_time_scale" getter="is_ignoring_time_scale" default="false">
+			If [code]true[/code], the animation player will ignore [member Engine.time_scale].
+		</member>
 	</members>
 	<signals>
 		<signal name="animation_changed">
