@@ -1641,7 +1641,11 @@ void RuntimeNodeSelect::_physics_frame() {
 				// Allow forcing box selection when an item was clicked.
 				selection_drag_state = SELECTION_DRAG_MOVE;
 			} else if (items.is_empty()) {
+#ifdef _3D_DISABLED
+				if (!selected_ci_nodes.is_empty()) {
+#else
 				if (!selected_ci_nodes.is_empty() || !selected_3d_nodes.is_empty()) {
+#endif // _3D_DISABLED
 					EngineDebugger::get_singleton()->send_message("remote_nothing_clicked", Array());
 					_clear_selection();
 				}
@@ -1710,7 +1714,10 @@ void RuntimeNodeSelect::_send_ids(const Vector<Node *> &p_picked_nodes, bool p_i
 		return;
 	}
 
-	const int limit = max_selection - (selected_ci_nodes.size() + selected_3d_nodes.size());
+	int limit = max_selection - selected_ci_nodes.size();
+#ifndef _3D_DISABLED
+	limit -= selected_3d_nodes.size();
+#endif // _3D_DISABLED
 	if (limit <= 0) {
 		return;
 	}
@@ -1848,9 +1855,15 @@ void RuntimeNodeSelect::_set_selected_nodes(const Vector<Node *> &p_nodes) {
 		}
 	}
 
+#ifdef _3D_DISABLED
+	if (!changed && nodes_ci.size() == selected_ci_nodes.size()) {
+		return;
+	}
+#else
 	if (!changed && nodes_ci.size() == selected_ci_nodes.size() && nodes_3d.size() == selected_3d_nodes.size()) {
 		return;
 	}
+#endif // _3D_DISABLED
 
 	_clear_selection();
 	selected_ci_nodes = nodes_ci;
@@ -1991,6 +2004,11 @@ void RuntimeNodeSelect::_update_selection() {
 		RS::get_singleton()->instance_set_transform(sb->instance_ofs, t_offset);
 		RS::get_singleton()->instance_set_transform(sb->instance_xray, t);
 		RS::get_singleton()->instance_set_transform(sb->instance_xray_ofs, t_offset);
+
+		RS::get_singleton()->instance_reset_physics_interpolation(sb->instance);
+		RS::get_singleton()->instance_reset_physics_interpolation(sb->instance_ofs);
+		RS::get_singleton()->instance_reset_physics_interpolation(sb->instance_xray);
+		RS::get_singleton()->instance_reset_physics_interpolation(sb->instance_xray_ofs);
 	}
 #endif // _3D_DISABLED
 }
@@ -2027,12 +2045,14 @@ void RuntimeNodeSelect::_update_selection_drag(const Point2 &p_end_pos) {
 	if (root->is_canvas_transform_override_enabled()) {
 		Transform2D xform = root->get_canvas_transform_override();
 		RS::get_singleton()->canvas_item_set_transform(sel_drag_ci, xform);
+		RS::get_singleton()->canvas_item_reset_physics_interpolation(sel_drag_ci);
 
 		selection_drawing.position = xform.affine_inverse().xform(selection_drag_area.position);
 		selection_drawing.size = xform.affine_inverse().xform(p_end_pos);
 		thickness = MAX(1, Math::ceil(1 / view_2d_zoom));
 	} else {
 		RS::get_singleton()->canvas_item_set_transform(sel_drag_ci, Transform2D());
+		RS::get_singleton()->canvas_item_reset_physics_interpolation(sel_drag_ci);
 
 		selection_drawing.position = selection_drag_area.position;
 		selection_drawing.size = p_end_pos;

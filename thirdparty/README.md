@@ -420,13 +420,13 @@ Files extracted from upstream source:
 ## icu4c
 
 - Upstream: https://github.com/unicode-org/icu
-- Version: 76.1 (8eca245c7484ac6cc179e3e5f7c1ea7680810f39, 2024)
+- Version: 77.1 (457157a92aa053e632cc7fcfd0e12f8a943b2d11, 2025)
 - License: Unicode
 
 Files extracted from upstream source:
 
 - The `common` folder
-- `scriptset.*`, `ucln_in.*`, `uspoof.cpp"` and `uspoof_impl.cpp` from the `i18n` folder
+- `scriptset.*`, `ucln_in.*`, `uspoof.cpp` and `uspoof_impl.*` from the `i18n` folder
 - `uspoof.h` from the `i18n/unicode` folder
 - `LICENSE`
 
@@ -530,14 +530,13 @@ Files extracted from upstream source:
 ## libpng
 
 - Upstream: http://libpng.org/pub/png/libpng.html
-- Version: 1.6.45 (51f5bd68b9b806d2c92b4318164d28b49357da31, 2024)
+- Version: 1.6.47 (872555f4ba910252783af1507f9e7fe1653be252, 2025)
 - License: libpng/zlib
 
 Files extracted from upstream source:
 
-- All `.c` and `.h` files of the main directory, apart from `example.c` and
-  `pngtest.c`
-- `arm/` (minus `filter_neon.S`), `intel/`, `loongarch/`, and `powerpc/` (minus `.editorconfig`) folders
+- All `.c` and `.h` files of the main directory, apart from `example.c` and `pngtest.c`
+- `arm/`, `intel/`, `loongarch/`, and `powerpc/` folders, except `arm/filter_neon.S` and `.editorconfig` files
 - `scripts/pnglibconf.h.prebuilt` as `pnglibconf.h`
 - `LICENSE`
 

@@ -347,29 +347,6 @@ void String::parse_utf32(const Span<char32_t> &p_cstr) {
 	*dst = 0;
 }
 
-void String::parse_utf32(const char32_t &p_char) {
-	if (p_char == 0) {
-		print_unicode_error("NUL character", true);
-		return;
-	}
-
-	resize(2);
-
-	char32_t *dst = ptrw();
-
-	if ((p_char & 0xfffff800) == 0xd800) {
-		print_unicode_error(vformat("Unpaired surrogate (%x)", (uint32_t)p_char));
-		dst[0] = _replacement_char;
-	} else if (p_char > 0x10ffff) {
-		print_unicode_error(vformat("Invalid unicode codepoint (%x)", (uint32_t)p_char));
-		dst[0] = _replacement_char;
-	} else {
-		dst[0] = p_char;
-	}
-
-	dst[1] = 0;
-}
-
 // assumes the following have already been validated:
 // p_char != nullptr
 // p_length > 0
@@ -1601,11 +1578,6 @@ String String::to_lower() const {
 	*lower_ptrw = 0;
 
 	return lower;
-}
-
-String String::chr(char32_t p_char) {
-	char32_t c[2] = { p_char, 0 };
-	return String(c);
 }
 
 String String::num(double p_num, int p_decimals) {
@@ -3357,7 +3329,7 @@ int String::find(const char *p_str, int p_from) const {
 }
 
 int String::find_char(char32_t p_char, int p_from) const {
-	return _cowdata.find(p_char, p_from);
+	return span().find(p_char, p_from);
 }
 
 int String::findmk(const Vector<String> &p_keys, int p_from, int *r_key) const {
@@ -3594,7 +3566,7 @@ int String::rfind(const char *p_str, int p_from) const {
 }
 
 int String::rfind_char(char32_t p_char, int p_from) const {
-	return _cowdata.rfind(p_char, p_from);
+	return span().rfind(p_char, p_from);
 }
 
 int String::rfindn(const String &p_str, int p_from) const {
@@ -4029,11 +4001,9 @@ String String::format(const Variant &values, const String &placeholder) const {
 		}
 	} else if (values.get_type() == Variant::DICTIONARY) {
 		Dictionary d = values;
-		List<Variant> keys;
-		d.get_key_list(&keys);
 
-		for (const Variant &key : keys) {
-			new_string = new_string.replace(placeholder.replace("_", key), d[key]);
+		for (const KeyValue<Variant, Variant> &kv : d) {
+			new_string = new_string.replace(placeholder.replace("_", kv.key), kv.value);
 		}
 	} else if (values.get_type() == Variant::OBJECT) {
 		Object *obj = values.get_validated_object();
@@ -6050,10 +6020,10 @@ String DTR(const String &p_text, const String &p_context) {
 	const String text = p_text.dedent().strip_edges();
 
 	if (TranslationServer::get_singleton()) {
-		return String(TranslationServer::get_singleton()->doc_translate(text, p_context)).replace("$DOCS_URL", VERSION_DOCS_URL);
+		return String(TranslationServer::get_singleton()->doc_translate(text, p_context)).replace("$DOCS_URL", GODOT_VERSION_DOCS_URL);
 	}
 
-	return text.replace("$DOCS_URL", VERSION_DOCS_URL);
+	return text.replace("$DOCS_URL", GODOT_VERSION_DOCS_URL);
 }
 
 /**
@@ -6067,14 +6037,14 @@ String DTRN(const String &p_text, const String &p_text_plural, int p_n, const St
 	const String text_plural = p_text_plural.dedent().strip_edges();
 
 	if (TranslationServer::get_singleton()) {
-		return String(TranslationServer::get_singleton()->doc_translate_plural(text, text_plural, p_n, p_context)).replace("$DOCS_URL", VERSION_DOCS_URL);
+		return String(TranslationServer::get_singleton()->doc_translate_plural(text, text_plural, p_n, p_context)).replace("$DOCS_URL", GODOT_VERSION_DOCS_URL);
 	}
 
 	// Return message based on English plural rule if translation is not possible.
 	if (p_n == 1) {
-		return text.replace("$DOCS_URL", VERSION_DOCS_URL);
+		return text.replace("$DOCS_URL", GODOT_VERSION_DOCS_URL);
 	}
-	return text_plural.replace("$DOCS_URL", VERSION_DOCS_URL);
+	return text_plural.replace("$DOCS_URL", GODOT_VERSION_DOCS_URL);
 }
 #endif
 

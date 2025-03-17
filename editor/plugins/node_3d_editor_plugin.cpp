@@ -662,10 +662,10 @@ int Node3DEditorViewport::get_selected_count() const {
 }
 
 void Node3DEditorViewport::cancel_transform() {
-	List<Node *> &selection = editor_selection->get_selected_node_list();
+	const List<Node *> &selection = editor_selection->get_selected_node_list();
 
-	for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
-		Node3D *sp = Object::cast_to<Node3D>(E->get());
+	for (Node *E : selection) {
+		Node3D *sp = Object::cast_to<Node3D>(E);
 		if (!sp) {
 			continue;
 		}
@@ -1227,10 +1227,10 @@ void Node3DEditorViewport::_compute_edit(const Point2 &p_point) {
 		se->original_local = selected->get_transform();
 		se->original = selected->get_global_transform();
 	} else {
-		List<Node *> &selection = editor_selection->get_selected_node_list();
+		const List<Node *> &selection = editor_selection->get_selected_node_list();
 
-		for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
-			Node3D *sp = Object::cast_to<Node3D>(E->get());
+		for (Node *E : selection) {
+			Node3D *sp = Object::cast_to<Node3D>(E);
 			if (!sp) {
 				continue;
 			}
@@ -2430,7 +2430,7 @@ void Node3DEditorViewport::_sinput(const Ref<InputEvent> &p_event) {
 				return;
 			}
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			for (Node *E : selection) {
 				Node3D *sp = Object::cast_to<Node3D>(E);
@@ -3001,6 +3001,9 @@ void Node3DEditorViewport::_notification(int p_what) {
 				}
 
 				Transform3D t = sp->get_global_gizmo_transform();
+				if (!t.is_finite()) {
+					continue;
+				}
 				AABB new_aabb = _calculate_spatial_bounds(sp);
 
 				exist = true;
@@ -3170,7 +3173,7 @@ void Node3DEditorViewport::_notification(int p_what) {
 						selected_node = ruler_start_point;
 					}
 				} else {
-					List<Node *> &selection = editor_selection->get_selected_node_list();
+					const List<Node *> &selection = editor_selection->get_selected_node_list();
 					if (selection.size() == 1) {
 						selected_node = Object::cast_to<Node3D>(selection.front()->get());
 					}
@@ -3563,7 +3566,7 @@ void Node3DEditorViewport::_menu_option(int p_option) {
 
 			Transform3D camera_transform = camera->get_global_transform();
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			undo_redo->create_action(TTR("Align Transform with View"));
 
@@ -3609,7 +3612,7 @@ void Node3DEditorViewport::_menu_option(int p_option) {
 
 			Transform3D camera_transform = camera->get_global_transform();
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			undo_redo->create_action(TTR("Align Rotation with View"));
 			for (Node *E : selection) {
@@ -4349,29 +4352,34 @@ void Node3DEditorViewport::focus_selection() {
 
 	const List<Node *> &selection = editor_selection->get_selected_node_list();
 
-	for (Node *E : selection) {
-		Node3D *sp = Object::cast_to<Node3D>(E);
-		if (!sp) {
+	for (Node *node : selection) {
+		Node3D *node_3d = Object::cast_to<Node3D>(node);
+		if (!node_3d) {
 			continue;
 		}
 
-		Node3DEditorSelectedItem *se = editor_selection->get_node_editor_data<Node3DEditorSelectedItem>(sp);
+		Node3DEditorSelectedItem *se = editor_selection->get_node_editor_data<Node3DEditorSelectedItem>(node_3d);
 		if (!se) {
 			continue;
 		}
 
 		if (se->gizmo.is_valid()) {
 			for (const KeyValue<int, Transform3D> &GE : se->subgizmos) {
-				center += se->gizmo->get_subgizmo_transform(GE.key).origin;
-				count++;
+				const Vector3 pos = se->gizmo->get_subgizmo_transform(GE.key).origin;
+				if (pos.is_finite()) {
+					center += pos;
+					count++;
+				}
 			}
 		}
-
-		center += sp->get_global_gizmo_transform().origin;
-		count++;
+		const Vector3 pos = node_3d->get_global_gizmo_transform().origin;
+		if (pos.is_finite()) {
+			center += pos;
+			count++;
+		}
 	}
 
-	if (count != 0) {
+	if (count > 1) {
 		center /= count;
 	}
 
@@ -4411,7 +4419,7 @@ Vector3 Node3DEditorViewport::_get_instance_position(const Point2 &p_pos, Node3D
 	HashSet<RID> rids;
 
 	if (!preview_node->is_inside_tree() && !ruler->is_inside_tree()) {
-		List<Node *> &selection = editor_selection->get_selected_node_list();
+		const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 		Node3D *first_selected_node = Object::cast_to<Node3D>(selection.front()->get());
 
@@ -4481,20 +4489,23 @@ Vector3 Node3DEditorViewport::_get_instance_position(const Point2 &p_pos, Node3D
 }
 
 AABB Node3DEditorViewport::_calculate_spatial_bounds(const Node3D *p_parent, bool p_omit_top_level, const Transform3D *p_bounds_orientation) {
-	AABB bounds;
-
-	Transform3D bounds_orientation;
-	if (p_bounds_orientation) {
-		bounds_orientation = *p_bounds_orientation;
-	} else {
-		bounds_orientation = p_parent->get_global_transform();
-	}
-
 	if (!p_parent) {
 		return AABB(Vector3(-0.2, -0.2, -0.2), Vector3(0.4, 0.4, 0.4));
 	}
+	const Transform3D parent_transform = p_parent->get_global_transform();
+	if (!parent_transform.is_finite()) {
+		return AABB();
+	}
+	AABB bounds;
 
-	const Transform3D xform_to_top_level_parent_space = bounds_orientation.affine_inverse() * p_parent->get_global_transform();
+	Transform3D bounds_orientation;
+	Transform3D xform_to_top_level_parent_space;
+	if (p_bounds_orientation) {
+		bounds_orientation = *p_bounds_orientation;
+		xform_to_top_level_parent_space = bounds_orientation.affine_inverse() * parent_transform;
+	} else {
+		bounds_orientation = parent_transform;
+	}
 
 	const VisualInstance3D *visual_instance = Object::cast_to<VisualInstance3D>(p_parent);
 	if (visual_instance) {
@@ -5067,10 +5078,10 @@ void Node3DEditorViewport::commit_transform() {
 	EditorUndoRedoManager *undo_redo = EditorUndoRedoManager::get_singleton();
 	undo_redo->create_action(_transform_name[_edit.mode]);
 
-	List<Node *> &selection = editor_selection->get_selected_node_list();
+	const List<Node *> &selection = editor_selection->get_selected_node_list();
 
-	for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
-		Node3D *sp = Object::cast_to<Node3D>(E->get());
+	for (Node *E : selection) {
+		Node3D *sp = Object::cast_to<Node3D>(E);
 		if (!sp) {
 			continue;
 		}
@@ -5092,7 +5103,7 @@ void Node3DEditorViewport::commit_transform() {
 
 void Node3DEditorViewport::apply_transform(Vector3 p_motion, double p_snap) {
 	bool local_coords = (spatial_editor->are_local_coords_enabled() && _edit.plane != TRANSFORM_VIEW);
-	List<Node *> &selection = editor_selection->get_selected_node_list();
+	const List<Node *> &selection = editor_selection->get_selected_node_list();
 	for (Node *E : selection) {
 		Node3D *sp = Object::cast_to<Node3D>(E);
 		if (!sp) {
@@ -6276,6 +6287,9 @@ void Node3DEditor::update_transform_gizmo() {
 	if (se && se->gizmo.is_valid()) {
 		for (const KeyValue<int, Transform3D> &E : se->subgizmos) {
 			Transform3D xf = se->sp->get_global_transform() * se->gizmo->get_subgizmo_transform(E.key);
+			if (!xf.is_finite()) {
+				continue;
+			}
 			gizmo_center += xf.origin;
 			if ((unsigned int)count == se->subgizmos.size() - 1 && local_gizmo_coords) {
 				gizmo_basis = xf.basis;
@@ -6283,9 +6297,9 @@ void Node3DEditor::update_transform_gizmo() {
 			count++;
 		}
 	} else {
-		List<Node *> &selection = editor_selection->get_selected_node_list();
-		for (List<Node *>::Element *E = selection.front(); E; E = E->next()) {
-			Node3D *sp = Object::cast_to<Node3D>(E->get());
+		const List<Node *> &selection = editor_selection->get_selected_node_list();
+		for (Node *E : selection) {
+			Node3D *sp = Object::cast_to<Node3D>(E);
 			if (!sp) {
 				continue;
 			}
@@ -6300,6 +6314,9 @@ void Node3DEditor::update_transform_gizmo() {
 			}
 
 			Transform3D xf = sel_item->sp->get_global_transform();
+			if (!xf.is_finite()) {
+				continue;
+			}
 			gizmo_center += xf.origin;
 			if (count == selection.size() - 1 && local_gizmo_coords) {
 				gizmo_basis = xf.basis;
@@ -6619,17 +6636,15 @@ void Node3DEditor::set_state(const Dictionary &p_state) {
 
 	if (d.has("gizmos_status")) {
 		Dictionary gizmos_status = d["gizmos_status"];
-		List<Variant> keys;
-		gizmos_status.get_key_list(&keys);
 
 		for (int j = 0; j < gizmo_plugins_by_name.size(); ++j) {
 			if (!gizmo_plugins_by_name[j]->can_be_hidden()) {
 				continue;
 			}
 			int state = EditorNode3DGizmoPlugin::VISIBLE;
-			for (const Variant &key : keys) {
-				if (gizmo_plugins_by_name.write[j]->get_gizmo_name() == String(key)) {
-					state = gizmos_status[key];
+			for (const KeyValue<Variant, Variant> &kv : gizmos_status) {
+				if (gizmo_plugins_by_name.write[j]->get_gizmo_name() == String(kv.key)) {
+					state = kv.value;
 					break;
 				}
 			}
@@ -6964,7 +6979,7 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 		case MENU_LOCK_SELECTED: {
 			undo_redo->create_action(TTR("Lock Selected"));
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
@@ -6985,7 +7000,7 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 		case MENU_UNLOCK_SELECTED: {
 			undo_redo->create_action(TTR("Unlock Selected"));
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
@@ -7006,7 +7021,7 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 		case MENU_GROUP_SELECTED: {
 			undo_redo->create_action(TTR("Group Selected"));
 
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
@@ -7026,7 +7041,7 @@ void Node3DEditor::_menu_item_pressed(int p_option) {
 		} break;
 		case MENU_UNGROUP_SELECTED: {
 			undo_redo->create_action(TTR("Ungroup Selected"));
-			List<Node *> &selection = editor_selection->get_selected_node_list();
+			const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 			for (Node *E : selection) {
 				Node3D *spatial = Object::cast_to<Node3D>(E);
@@ -7942,7 +7957,7 @@ void Node3DEditor::_refresh_menu_icons() {
 	bool all_grouped = true;
 	bool has_node3d_item = false;
 
-	List<Node *> &selection = editor_selection->get_selected_node_list();
+	const List<Node *> &selection = editor_selection->get_selected_node_list();
 
 	if (selection.is_empty()) {
 		all_locked = false;
