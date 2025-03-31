@@ -275,7 +275,7 @@ Window *Window::get_from_id(DisplayServer::WindowID p_window_id) {
 	if (p_window_id == DisplayServer::INVALID_WINDOW_ID) {
 		return nullptr;
 	}
-	return Object::cast_to<Window>(ObjectDB::get_instance(DisplayServer::get_singleton()->window_get_attached_instance_id(p_window_id)));
+	return ObjectDB::get_instance<Window>(DisplayServer::get_singleton()->window_get_attached_instance_id(p_window_id));
 }
 
 void Window::set_title(const String &p_title) {
@@ -310,8 +310,7 @@ void Window::set_title(const String &p_title) {
 
 #ifdef DEBUG_ENABLED
 	if (EngineDebugger::get_singleton() && window_id == DisplayServer::MAIN_WINDOW_ID && !Engine::get_singleton()->is_project_manager_hint()) {
-		Array arr;
-		arr.push_back(tr_title);
+		Array arr = { tr_title };
 		EngineDebugger::get_singleton()->send_message("window:title", arr);
 	}
 #endif

@@ -46,6 +46,9 @@
 template <typename T>
 class TypedArray;
 
+template <typename T>
+class Ref;
+
 enum PropertyHint {
 	PROPERTY_HINT_NONE, ///< no hint provided.
 	PROPERTY_HINT_RANGE, ///< hint_text = "min,max[,step][,or_greater][,or_less][,hide_slider][,radians_as_degrees][,degrees][,exp][,suffix:<keyword>] range.
@@ -440,6 +443,9 @@ public:                                                                         
 	}                                                                                                                                       \
                                                                                                                                             \
 protected:                                                                                                                                  \
+	virtual bool _derives_from(const std::type_info &p_type_info) const override {                                                          \
+		return typeid(m_class) == p_type_info || m_inherits::_derives_from(p_type_info);                                                    \
+	}                                                                                                                                       \
 	_FORCE_INLINE_ static void (*_get_bind_methods())() {                                                                                   \
 		return &m_class::_bind_methods;                                                                                                     \
 	}                                                                                                                                       \
@@ -768,6 +774,12 @@ protected:
 	mutable VirtualMethodTracker *virtual_method_list = nullptr;
 #endif
 
+	virtual bool _derives_from(const std::type_info &p_type_info) const {
+		// This could just be false because nobody would reasonably ask if an Object subclass derives from Object,
+		// but it would be wrong if somebody actually does ask. It's not too slow to check anyway.
+		return typeid(Object) == p_type_info;
+	}
+
 public: // Should be protected, but bug in clang++.
 	static void initialize_class();
 	_FORCE_INLINE_ static void register_custom_data_to_otdb() {}
@@ -787,12 +799,26 @@ public:
 
 	template <typename T>
 	static T *cast_to(Object *p_object) {
-		return p_object ? dynamic_cast<T *>(p_object) : nullptr;
+		// This is like dynamic_cast, but faster.
+		// The reason is that we can assume no virtual and multiple inheritance.
+		static_assert(std::is_base_of_v<Object, T>, "T must be derived from Object");
+		if constexpr (std::is_same_v<std::decay_t<T>, typename T::self_type>) {
+			return p_object && p_object->_derives_from(typeid(T)) ? static_cast<T *>(p_object) : nullptr;
+		} else {
+			// T does not use GDCLASS, must fall back to dynamic_cast.
+			return p_object ? dynamic_cast<T *>(p_object) : nullptr;
+		}
 	}
 
 	template <typename T>
 	static const T *cast_to(const Object *p_object) {
-		return p_object ? dynamic_cast<const T *>(p_object) : nullptr;
+		static_assert(std::is_base_of_v<Object, T>, "T must be derived from Object");
+		if constexpr (std::is_same_v<std::decay_t<T>, typename T::self_type>) {
+			return p_object && p_object->_derives_from(typeid(T)) ? static_cast<const T *>(p_object) : nullptr;
+		} else {
+			// T does not use GDCLASS, must fall back to dynamic_cast.
+			return p_object ? dynamic_cast<const T *>(p_object) : nullptr;
+		}
 	}
 
 	enum {
@@ -1052,6 +1078,15 @@ public:
 
 		return object;
 	}
+
+	template <typename T>
+	_ALWAYS_INLINE_ static T *get_instance(ObjectID p_instance_id) {
+		return Object::cast_to<T>(get_instance(p_instance_id));
+	}
+
+	template <typename T>
+	_ALWAYS_INLINE_ static Ref<T> get_ref(ObjectID p_instance_id); // Defined in ref_counted.h
+
 	static void debug_objects(DebugFunc p_func);
 	static int get_object_count();
 };

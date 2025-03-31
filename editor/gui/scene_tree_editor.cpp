@@ -112,7 +112,7 @@ void SceneTreeEditor::_cell_button_pressed(Object *p_item, int p_column, int p_i
 	} else if (p_id == BUTTON_VISIBILITY) {
 		undo_redo->create_action(TTR("Toggle Visible"));
 		_toggle_visible(n);
-		List<Node *> selection = editor_selection->get_selected_node_list();
+		List<Node *> selection = editor_selection->get_top_selected_node_list();
 		if (selection.size() > 1 && selection.find(n) != nullptr) {
 			for (Node *nv : selection) {
 				ERR_FAIL_NULL(nv);
@@ -512,8 +512,7 @@ void SceneTreeEditor::_update_node(Node *p_node, TreeItem *p_item, bool p_part_o
 
 		String msg_temp;
 		if (num_connections >= 1) {
-			Array arr;
-			arr.push_back(num_connections);
+			Array arr = { num_connections };
 			msg_temp += TTRN("Node has one connection.", "Node has {num} connections.", num_connections).format(arr, "{num}");
 			if (num_groups >= 1) {
 				msg_temp += "\n";
@@ -1291,7 +1290,7 @@ void SceneTreeEditor::_cell_multi_selected(Object *p_object, int p_cell, bool p_
 
 void SceneTreeEditor::_tree_scroll_to_item(ObjectID p_item_id) {
 	ERR_FAIL_NULL(tree);
-	TreeItem *item = Object::cast_to<TreeItem>(ObjectDB::get_instance(p_item_id));
+	TreeItem *item = ObjectDB::get_instance<TreeItem>(p_item_id);
 	if (item) {
 		tree->scroll_to_item(item, true);
 	}

@@ -48,7 +48,7 @@
 #include "core/os/keyboard.h"
 
 TileMapLayer *TileMapLayerSubEditorPlugin::_get_edited_layer() const {
-	return Object::cast_to<TileMapLayer>(ObjectDB::get_instance(edited_tile_map_layer_id));
+	return ObjectDB::get_instance<TileMapLayer>(edited_tile_map_layer_id);
 }
 
 void TileMapLayerSubEditorPlugin::draw_tile_coords_over_viewport(Control *p_overlay, const TileMapLayer *p_edited_layer, Ref<TileSet> p_tile_set, bool p_show_rectangle_size, const Vector2i &p_rectangle_origin) {
@@ -2177,7 +2177,7 @@ void TileMapLayerEditorTilesPlugin::edit(ObjectID p_tile_map_layer_id) {
 		}
 	}
 
-	TileMapLayer *new_tile_map_layer = Object::cast_to<TileMapLayer>(ObjectDB::get_instance(edited_tile_map_layer_id));
+	TileMapLayer *new_tile_map_layer = ObjectDB::get_instance<TileMapLayer>(edited_tile_map_layer_id);
 	Ref<TileSet> new_tile_set;
 	if (new_tile_map_layer) {
 		new_tile_set = new_tile_map_layer->get_tile_set();
@@ -3641,7 +3641,7 @@ TileMapLayerEditorTerrainsPlugin::TileMapLayerEditorTerrainsPlugin() {
 }
 
 TileMapLayer *TileMapLayerEditor::_get_edited_layer() const {
-	return Object::cast_to<TileMapLayer>(ObjectDB::get_instance(edited_tile_map_layer_id));
+	return ObjectDB::get_instance<TileMapLayer>(edited_tile_map_layer_id);
 }
 
 void TileMapLayerEditor::_find_tile_map_layers_in_scene(Node *p_current, const Node *p_owner, Vector<TileMapLayer *> &r_list) const {
@@ -4285,10 +4285,7 @@ void TileMapLayerEditor::forward_canvas_draw_over_viewport(Control *p_overlay) {
 
 			if (!source || !source->has_tile(tile_atlas_coords) || !source->has_alternative_tile(tile_atlas_coords, tile_alternative_tile)) {
 				// Generate a random color from the hashed identifier of the tiles.
-				Array to_hash;
-				to_hash.push_back(tile_source_id);
-				to_hash.push_back(tile_atlas_coords);
-				to_hash.push_back(tile_alternative_tile);
+				Array to_hash = { tile_source_id, tile_atlas_coords, tile_alternative_tile };
 				uint32_t hash = RandomPCG(to_hash.hash()).rand();
 
 				Color color;
