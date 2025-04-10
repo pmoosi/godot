@@ -301,6 +301,7 @@ private:
 
 	void _compute_offsets(Rect2 p_rect, const real_t p_anchors[4], real_t (&r_offsets)[4]);
 	void _compute_anchors(Rect2 p_rect, const real_t p_offsets[4], real_t (&r_anchors)[4]);
+	void _compute_edge_positions(Rect2 p_rect, real_t (&r_edge_positions)[4]);
 
 	void _set_layout_mode(LayoutMode p_mode);
 	void _update_layout_mode();
@@ -453,8 +454,6 @@ public:
 	virtual bool is_text_field() const;
 
 	// Global relations.
-
-	bool is_top_level_control() const;
 
 	Control *get_parent_control() const;
 	Window *get_parent_window() const;

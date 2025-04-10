@@ -3222,9 +3222,9 @@ Error Main::setup2(bool p_show_boot_logo) {
 					break;
 			}
 			if (!(force_res || use_custom_res)) {
-				display_server->window_set_size(window_size * ui_scale, DisplayServer::MAIN_WINDOW_ID);
+				display_server->window_set_size(Size2(window_size) * ui_scale, DisplayServer::MAIN_WINDOW_ID);
 			}
-			if (display_server->has_feature(DisplayServer::FEATURE_SUBWINDOWS)) { // Note: add "&& !display_server->has_feature(DisplayServer::FEATURE_SELF_FITTING_WINDOWS)" when Wayland multi-window support is merged.
+			if (display_server->has_feature(DisplayServer::FEATURE_SUBWINDOWS) && !display_server->has_feature(DisplayServer::FEATURE_SELF_FITTING_WINDOWS)) {
 				Size2 real_size = DisplayServer::get_singleton()->window_get_size();
 				Rect2i scr_rect = display_server->screen_get_usable_rect(init_screen);
 				display_server->window_set_position(scr_rect.position + (scr_rect.size - real_size) / 2, DisplayServer::MAIN_WINDOW_ID);
@@ -4903,6 +4903,12 @@ void Main::cleanup(bool p_force) {
 	ResourceLoader::remove_custom_loaders();
 	ResourceSaver::remove_custom_savers();
 	PropertyListHelper::clear_base_helpers();
+
+	// Remove the lock file if the engine exits successfully. Some automated processes such as
+	// --export/--import can bypass and/or finish faster than the existing check to remove the lock file.
+	if (OS::get_singleton()->get_exit_code() == EXIT_SUCCESS) {
+		OS::get_singleton()->remove_lock_file();
+	}
 
 	// Flush before uninitializing the scene, but delete the MessageQueue as late as possible.
 	message_queue->flush();
