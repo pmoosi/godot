@@ -40,7 +40,6 @@ def get_opts():
             False,
         ),
         BoolVariable("swappy", "Use Swappy Frame Pacing library", False),
-        BoolVariable("gradle_do_not_strip", "Whether Gradle should strip the Android *.so libraries or not", False),
     ]
 
 
@@ -69,7 +68,7 @@ def get_android_ndk_root(env: "SConsEnvironment"):
 
 # This is kept in sync with the value in 'platform/android/java/app/config.gradle'.
 def get_ndk_version():
-    return "23.2.8568313"
+    return "27.2.12479018"
 
 
 # This is kept in sync with the value in 'platform/android/java/app/config.gradle'.
@@ -207,8 +206,6 @@ def configure(env: "SConsEnvironment"):
         env.Append(CPPDEFINES=[("_FILE_OFFSET_BITS", 64)])
 
     if env["arch"] == "x86_32":
-        # The NDK adds this if targeting API < 24, so we can drop it when Godot targets it at least
-        env.Append(CCFLAGS=["-mstackrealign"])
         if has_swappy:
             env.Append(LIBPATH=["#thirdparty/swappy-frame-pacing/x86"])
     elif env["arch"] == "x86_64":
