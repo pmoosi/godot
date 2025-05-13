@@ -66,39 +66,45 @@ constexpr size_t strlen(const char32_t *p_str) {
 }
 
 // strlen equivalent function for wchar_t * arguments; depends on the platform.
-constexpr size_t strlen(const wchar_t *str) {
+constexpr size_t strlen(const wchar_t *p_str) {
 	// Use static_cast twice because reinterpret_cast is not allowed in constexpr
 #ifdef WINDOWS_ENABLED
 	// wchar_t is 16-bit
-	return strlen(static_cast<const char16_t *>(static_cast<const void *>(str)));
+	return strlen(static_cast<const char16_t *>(static_cast<const void *>(p_str)));
 #else
 	// wchar_t is 32-bit
-	return strlen(static_cast<const char32_t *>(static_cast<const void *>(str)));
+	return strlen(static_cast<const char32_t *>(static_cast<const void *>(p_str)));
 #endif
 }
 
-constexpr size_t _strlen_clipped(const char *p_str, int p_clip_to_len) {
-	if (p_clip_to_len < 0) {
-		return strlen(p_str);
-	}
-
-	int len = 0;
+// strnlen equivalent function for char16_t * arguments.
+constexpr size_t strnlen(const char16_t *p_str, size_t p_clip_to_len) {
+	size_t len = 0;
 	while (len < p_clip_to_len && *(p_str++) != 0) {
 		len++;
 	}
 	return len;
 }
 
-constexpr size_t _strlen_clipped(const char32_t *p_str, int p_clip_to_len) {
-	if (p_clip_to_len < 0) {
-		return strlen(p_str);
-	}
-
-	int len = 0;
+// strnlen equivalent function for char32_t * arguments.
+constexpr size_t strnlen(const char32_t *p_str, size_t p_clip_to_len) {
+	size_t len = 0;
 	while (len < p_clip_to_len && *(p_str++) != 0) {
 		len++;
 	}
 	return len;
+}
+
+// strnlen equivalent function for wchar_t * arguments; depends on the platform.
+constexpr size_t strnlen(const wchar_t *p_str, size_t p_clip_to_len) {
+	// Use static_cast twice because reinterpret_cast is not allowed in constexpr
+#ifdef WINDOWS_ENABLED
+	// wchar_t is 16-bit
+	return strnlen(static_cast<const char16_t *>(static_cast<const void *>(p_str)), p_clip_to_len);
+#else
+	// wchar_t is 32-bit
+	return strnlen(static_cast<const char32_t *>(static_cast<const void *>(p_str)), p_clip_to_len);
+#endif
 }
 
 template <typename L, typename R>
@@ -121,7 +127,7 @@ constexpr int64_t str_compare(const L *l_ptr, const R *r_ptr) {
 /*************************************************************************/
 
 template <typename T>
-class CharProxy {
+class [[nodiscard]] CharProxy {
 	friend String;
 	friend CharStringT<T>;
 
@@ -164,7 +170,7 @@ public:
 /*************************************************************************/
 
 template <typename T>
-class CharStringT {
+class [[nodiscard]] CharStringT {
 	CowData<T> _cowdata;
 	static constexpr T _null = 0;
 
@@ -259,7 +265,7 @@ using Char16String = CharStringT<char16_t>;
 /*  String                                                               */
 /*************************************************************************/
 
-class String {
+class [[nodiscard]] String {
 	CowData<char32_t> _cowdata;
 	static constexpr char32_t _null = 0;
 	static constexpr char32_t _replacement_char = 0xfffd;
@@ -514,7 +520,7 @@ public:
 	String rstrip(const String &p_chars) const;
 	String get_extension() const;
 	String get_basename() const;
-	String path_join(const String &p_file) const;
+	String path_join(const String &p_path) const;
 	char32_t unicode_at(int p_idx) const;
 
 	CharString ascii(bool p_allow_extended = false) const;
@@ -539,7 +545,11 @@ public:
 	Error append_utf8(const Span<char> &p_range, bool p_skip_cr = false) {
 		return append_utf8(p_range.ptr(), p_range.size(), p_skip_cr);
 	}
-	static String utf8(const char *p_utf8, int p_len = -1);
+	static String utf8(const char *p_utf8, int p_len = -1) {
+		String ret;
+		ret.append_utf8(p_utf8, p_len);
+		return ret;
+	}
 	static String utf8(const Span<char> &p_range) { return utf8(p_range.ptr(), p_range.size()); }
 
 	Char16String utf16() const;
@@ -547,7 +557,11 @@ public:
 	Error append_utf16(const Span<char16_t> p_range, bool p_skip_cr = false) {
 		return append_utf16(p_range.ptr(), p_range.size(), p_skip_cr);
 	}
-	static String utf16(const char16_t *p_utf16, int p_len = -1);
+	static String utf16(const char16_t *p_utf16, int p_len = -1) {
+		String ret;
+		ret.append_utf16(p_utf16, p_len);
+		return ret;
+	}
 	static String utf16(const Span<char16_t> &p_range) { return utf16(p_range.ptr(), p_range.size()); }
 
 	void append_utf32(const Span<char32_t> &p_cstr);

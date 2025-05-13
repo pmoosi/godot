@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  navigation_mesh_editor_plugin.h                                       */
+/*  navigation_link_3d_editor_plugin.h                                    */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -32,49 +32,18 @@
 
 #include "editor/plugins/editor_plugin.h"
 
-class AcceptDialog;
-class Button;
-class HBoxContainer;
-class Label;
-class NavigationRegion3D;
+#include "navigation_link_3d_gizmo_plugin.h"
 
-class NavigationMeshEditor : public Control {
-	friend class NavigationMeshEditorPlugin;
+class NavigationLink3DEditorPlugin : public EditorPlugin {
+	GDCLASS(NavigationLink3DEditorPlugin, EditorPlugin);
 
-	GDCLASS(NavigationMeshEditor, Control);
-
-	AcceptDialog *err_dialog = nullptr;
-
-	HBoxContainer *bake_hbox = nullptr;
-	Button *button_bake = nullptr;
-	Button *button_reset = nullptr;
-	Label *bake_info = nullptr;
-
-	NavigationRegion3D *node = nullptr;
-
-	void _bake_pressed();
-	void _clear_pressed();
-
-protected:
-	void _node_removed(Node *p_node);
-	void _notification(int p_what);
+	Ref<NavigationLink3DGizmoPlugin> gizmo_plugin;
 
 public:
-	void edit(NavigationRegion3D *p_nav_region);
-	NavigationMeshEditor();
-};
-
-class NavigationMeshEditorPlugin : public EditorPlugin {
-	GDCLASS(NavigationMeshEditorPlugin, EditorPlugin);
-
-	NavigationMeshEditor *navigation_mesh_editor = nullptr;
-
-public:
-	virtual String get_plugin_name() const override { return "NavigationMesh"; }
+	virtual String get_plugin_name() const override { return "NavigationLink3D"; }
 	bool has_main_screen() const override { return false; }
 	virtual void edit(Object *p_object) override;
 	virtual bool handles(Object *p_object) const override;
-	virtual void make_visible(bool p_visible) override;
 
-	NavigationMeshEditorPlugin();
+	NavigationLink3DEditorPlugin();
 };

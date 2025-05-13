@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  navigation_polygon_editor_plugin.h                                    */
+/*  navigation_region_3d_editor_plugin.h                                  */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,23 +30,20 @@
 
 #pragma once
 
-#include "editor/plugins/abstract_polygon_2d_editor.h"
-
 #include "editor/plugins/editor_plugin.h"
 
+#include "navigation_region_3d_gizmo_plugin.h"
+
 class AcceptDialog;
+class Button;
 class HBoxContainer;
-class NavigationPolygon;
-class NavigationRegion2D;
+class Label;
+class NavigationRegion3D;
 
-class NavigationPolygonEditor : public AbstractPolygon2DEditor {
-	friend class NavigationPolygonEditorPlugin;
+class NavigationRegion3DEditor : public Control {
+	friend class NavigationRegion3DEditorPlugin;
 
-	GDCLASS(NavigationPolygonEditor, AbstractPolygon2DEditor);
-
-	NavigationRegion2D *node = nullptr;
-
-	Ref<NavigationPolygon> _ensure_navpoly() const;
+	GDCLASS(NavigationRegion3DEditor, Control);
 
 	AcceptDialog *err_dialog = nullptr;
 
@@ -55,41 +52,33 @@ class NavigationPolygonEditor : public AbstractPolygon2DEditor {
 	Button *button_reset = nullptr;
 	Label *bake_info = nullptr;
 
-	Timer *rebake_timer = nullptr;
-	float _rebake_timer_delay = 1.5;
-	void _rebake_timer_timeout();
+	NavigationRegion3D *node = nullptr;
 
 	void _bake_pressed();
 	void _clear_pressed();
 
-	void _update_polygon_editing_state();
-
 protected:
+	void _node_removed(Node *p_node);
 	void _notification(int p_what);
 
-	virtual Node2D *_get_node() const override;
-	virtual void _set_node(Node *p_polygon) override;
-
-	virtual int _get_polygon_count() const override;
-	virtual Variant _get_polygon(int p_idx) const override;
-	virtual void _set_polygon(int p_idx, const Variant &p_polygon) const override;
-
-	virtual void _action_add_polygon(const Variant &p_polygon) override;
-	virtual void _action_remove_polygon(int p_idx) override;
-	virtual void _action_set_polygon(int p_idx, const Variant &p_previous, const Variant &p_polygon) override;
-
-	virtual bool _has_resource() const override;
-	virtual void _create_resource() override;
-
 public:
-	NavigationPolygonEditor();
+	void edit(NavigationRegion3D *p_nav_region);
+	NavigationRegion3DEditor();
 };
 
-class NavigationPolygonEditorPlugin : public AbstractPolygon2DEditorPlugin {
-	GDCLASS(NavigationPolygonEditorPlugin, AbstractPolygon2DEditorPlugin);
+class NavigationRegion3DEditorPlugin : public EditorPlugin {
+	GDCLASS(NavigationRegion3DEditorPlugin, EditorPlugin);
 
-	NavigationPolygonEditor *navigation_polygon_editor = nullptr;
+	NavigationRegion3DEditor *navigation_region_editor = nullptr;
+
+	Ref<NavigationRegion3DGizmoPlugin> gizmo_plugin;
 
 public:
-	NavigationPolygonEditorPlugin();
+	virtual String get_plugin_name() const override { return "NavigationRegion3D"; }
+	bool has_main_screen() const override { return false; }
+	virtual void edit(Object *p_object) override;
+	virtual bool handles(Object *p_object) const override;
+	virtual void make_visible(bool p_visible) override;
+
+	NavigationRegion3DEditorPlugin();
 };

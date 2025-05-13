@@ -836,6 +836,11 @@
 		<member name="interface/editor/code_font_size" type="int" setter="" getter="">
 			The size of the font in the script editor. This setting does not impact the font size of the Output panel (see [member run/output/font_size]).
 		</member>
+		<member name="interface/editor/collapse_main_menu" type="bool" setter="" getter="">
+			If [code]true[/code], the main menu collapses into a [MenuButton].
+			[b]Note:[/b] This setting is only applicable on macOS when [member interface/editor/use_embedded_menu] is [code]true[/code].
+			[b]Note:[/b] Defaults to [code]true[/code] on the Android editor.
+		</member>
 		<member name="interface/editor/custom_display_scale" type="float" setter="" getter="">
 			The custom editor scale factor to use. This can be used for displays with very high DPI where a scale factor of 200% is not sufficient.
 			[b]Note:[/b] Only effective if [member interface/editor/display_scale] is set to [b]Custom[/b].
@@ -1271,7 +1276,9 @@
 			If [code]true[/code], tool scripts will be automatically soft-reloaded after they are saved.
 		</member>
 		<member name="text_editor/behavior/files/auto_reload_scripts_on_external_change" type="bool" setter="" getter="">
-			If [code]true[/code], automatically reloads scripts in the editor when they have been modified and saved by external editors.
+			If [code]true[/code], automatically reloads scripts and text-based shaders in the editor when they have been modified and saved by external editors or tools and the editor regains focus. External changes can be discarded by using the Undo function after they've been loaded in the editor.
+			If [code]false[/code], a file conflict dialog will always be displayed when the editor regains focus. This dialog allows you to choose whether to keep local changes or discard them.
+			[b]Note:[/b] Even when this setting is [code]true[/code], a file conflict dialog is still displayed in certain situations. For instance, it will display when the script editor has unsaved changes that the external editor did not account for.
 		</member>
 		<member name="text_editor/behavior/files/autosave_interval_secs" type="int" setter="" getter="">
 			If set to a value greater than [code]0[/code], automatically saves the current script following the specified interval (in seconds). This can be used to prevent data loss if the editor crashes.
@@ -1557,9 +1564,6 @@
 		</member>
 		<member name="text_editor/theme/highlighting/word_highlighted_color" type="Color" setter="" getter="">
 			The script editor's color for words highlighted by selecting them. Only visible if [member text_editor/appearance/caret/highlight_all_occurrences] is [code]true[/code].
-		</member>
-		<member name="text_editor/theme/line_spacing" type="int" setter="" getter="">
-			The vertical line separation used in text editors, in pixels.
 		</member>
 		<member name="version_control/ssh_private_key_path" type="String" setter="" getter="">
 			Path to private SSH key file for the editor's Version Control integration credentials.
