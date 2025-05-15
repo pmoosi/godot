@@ -192,7 +192,8 @@ DisplayServerEmbedded::DisplayServerEmbedded(const String &p_rendering_driver, W
 	layer.contentsScale = scale;
 	layer.magnificationFilter = kCAFilterNearest;
 	layer.minificationFilter = kCAFilterNearest;
-	layer.opaque = YES; // Always opaque when embedded.
+	transparent = ((p_flags & WINDOW_FLAG_TRANSPARENT_BIT) == WINDOW_FLAG_TRANSPARENT_BIT);
+	layer.opaque = !(OS::get_singleton()->is_layered_allowed() && transparent);
 	layer.actions = @{ @"contents" : [NSNull null] }; // Disable implicit animations for contents.
 	// AppKit frames, bounds and positions are always in points.
 	CGRect bounds = CGRectMake(0, 0, p_resolution.width, p_resolution.height);
@@ -426,7 +427,10 @@ void DisplayServerEmbedded::_dispatch_input_events(const Ref<InputEvent> &p_even
 
 void DisplayServerEmbedded::send_input_event(const Ref<InputEvent> &p_event, WindowID p_id) const {
 	if (p_id != INVALID_WINDOW_ID) {
-		_window_callback(input_event_callbacks[p_id], p_event);
+		const Callable *cb = input_event_callbacks.getptr(p_id);
+		if (cb) {
+			_window_callback(*cb, p_event);
+		}
 	} else {
 		for (const KeyValue<WindowID, Callable> &E : input_event_callbacks) {
 			_window_callback(E.value, p_event);
@@ -654,10 +658,16 @@ bool DisplayServerEmbedded::window_is_maximize_allowed(WindowID p_window) const 
 }
 
 void DisplayServerEmbedded::window_set_flag(WindowFlags p_flag, bool p_enabled, WindowID p_window) {
-	// Not supported
+	if (p_flag == WINDOW_FLAG_TRANSPARENT && p_window == MAIN_WINDOW_ID) {
+		transparent = p_enabled;
+		layer.opaque = !(OS::get_singleton()->is_layered_allowed() && transparent);
+	}
 }
 
 bool DisplayServerEmbedded::window_get_flag(WindowFlags p_flag, WindowID p_window) const {
+	if (p_flag == WINDOW_FLAG_TRANSPARENT && p_window == MAIN_WINDOW_ID) {
+		return transparent;
+	}
 	return false;
 }
 
