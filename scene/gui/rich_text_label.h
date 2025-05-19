@@ -705,7 +705,6 @@ private:
 	RID accessibility_scroll_element;
 
 	bool ignore_time_scale = false;
-
 	bool fit_content = false;
 
 	struct ThemeCache {
