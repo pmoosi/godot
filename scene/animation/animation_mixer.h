@@ -325,6 +325,7 @@ protected:
 	AHashMap<NodePath, int> track_map;
 	int track_count = 0;
 	bool deterministic = false;
+	bool ignore_time_scale = false;
 
 	/* ---- Root motion accumulator for Skeleton3D ---- */
 	NodePath root_motion_track;
@@ -420,6 +421,9 @@ public:
 
 	void set_deterministic(bool p_deterministic);
 	bool is_deterministic() const;
+
+	void set_ignore_time_scale(bool p_ignore);
+	bool is_ignoring_time_scale() const;
 
 	void set_root_node(const NodePath &p_path);
 	NodePath get_root_node() const;

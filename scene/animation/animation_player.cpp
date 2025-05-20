@@ -313,10 +313,8 @@ bool AnimationPlayer::_blend_pre_process(double p_delta, int p_track_count, cons
 		playback.started = false;
 	}
 
-	const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : p_delta;
-
 	AnimationData *prev_from = playback.current.from;
-	_blend_playback_data(delta, started);
+	_blend_playback_data(p_delta, started);
 
 	if (prev_from != playback.current.from) {
 		return false; // Animation has been changed in the process (may be caused by method track), abort process.
@@ -326,8 +324,7 @@ bool AnimationPlayer::_blend_pre_process(double p_delta, int p_track_count, cons
 }
 
 void AnimationPlayer::_blend_capture(double p_delta) {
-	const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : p_delta;
-	blend_capture(delta * Math::abs(speed_scale));
+	blend_capture(p_delta * Math::abs(speed_scale));
 }
 
 void AnimationPlayer::_blend_post_process() {
@@ -634,14 +631,6 @@ void AnimationPlayer::set_speed_scale(float p_speed) {
 
 float AnimationPlayer::get_speed_scale() const {
 	return speed_scale;
-}
-
-void AnimationPlayer::set_ignore_time_scale(bool p_ignore) {
-	ignore_time_scale = p_ignore;
-}
-
-bool AnimationPlayer::is_ignoring_time_scale() {
-	return ignore_time_scale;
 }
 
 float AnimationPlayer::get_playing_speed() const {
@@ -1001,8 +990,6 @@ void AnimationPlayer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_speed_scale", "speed"), &AnimationPlayer::set_speed_scale);
 	ClassDB::bind_method(D_METHOD("get_speed_scale"), &AnimationPlayer::get_speed_scale);
-	ClassDB::bind_method(D_METHOD("set_ignore_time_scale", "ignore"), &AnimationPlayer::set_ignore_time_scale);
-	ClassDB::bind_method(D_METHOD("is_ignoring_time_scale"), &AnimationPlayer::is_ignoring_time_scale);
 	ClassDB::bind_method(D_METHOD("get_playing_speed"), &AnimationPlayer::get_playing_speed);
 
 	ClassDB::bind_method(D_METHOD("set_autoplay", "name"), &AnimationPlayer::set_autoplay);
@@ -1041,7 +1028,6 @@ void AnimationPlayer::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "playback_default_blend_time", PROPERTY_HINT_RANGE, "0,4096,0.01,suffix:s"), "set_default_blend_time", "get_default_blend_time");
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed_scale", PROPERTY_HINT_RANGE, "-4,4,0.001,or_less,or_greater"), "set_speed_scale", "get_speed_scale");
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_time_scale"), "set_ignore_time_scale", "is_ignoring_time_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "movie_quit_on_finish"), "set_movie_quit_on_finish_enabled", "is_movie_quit_on_finish_enabled");
 
 	ADD_SIGNAL(MethodInfo(SNAME("current_animation_changed"), PropertyInfo(Variant::STRING, "name")));

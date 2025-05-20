@@ -483,6 +483,14 @@ bool AnimationMixer::is_deterministic() const {
 	return deterministic;
 }
 
+void AnimationMixer::set_ignore_time_scale(bool p_ignore) {
+	ignore_time_scale = p_ignore;
+}
+
+bool AnimationMixer::is_ignoring_time_scale() const {
+	return ignore_time_scale;
+}
+
 void AnimationMixer::set_callback_mode_process(AnimationCallbackModeProcess p_mode) {
 	if (callback_mode_process == p_mode) {
 		return;
@@ -2352,13 +2360,15 @@ void AnimationMixer::_notification(int p_what) {
 
 		case NOTIFICATION_INTERNAL_PROCESS: {
 			if (active && callback_mode_process == ANIMATION_CALLBACK_MODE_PROCESS_IDLE) {
-				_process_animation(get_process_delta_time());
+				const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : get_process_delta_time();
+				_process_animation(delta);
 			}
 		} break;
 
 		case NOTIFICATION_INTERNAL_PHYSICS_PROCESS: {
 			if (active && callback_mode_process == ANIMATION_CALLBACK_MODE_PROCESS_PHYSICS) {
-				_process_animation(get_physics_process_delta_time());
+				const double delta = ignore_time_scale ? Engine::get_singleton()->get_process_step() : get_physics_process_delta_time();
+				_process_animation(delta);
 			}
 		} break;
 
@@ -2410,6 +2420,9 @@ void AnimationMixer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_deterministic", "deterministic"), &AnimationMixer::set_deterministic);
 	ClassDB::bind_method(D_METHOD("is_deterministic"), &AnimationMixer::is_deterministic);
 
+	ClassDB::bind_method(D_METHOD("set_ignore_time_scale", "ignore"), &AnimationMixer::set_ignore_time_scale);
+	ClassDB::bind_method(D_METHOD("is_ignoring_time_scale"), &AnimationMixer::is_ignoring_time_scale);
+
 	ClassDB::bind_method(D_METHOD("set_root_node", "path"), &AnimationMixer::set_root_node);
 	ClassDB::bind_method(D_METHOD("get_root_node"), &AnimationMixer::get_root_node);
 
@@ -2453,6 +2466,7 @@ void AnimationMixer::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "active"), "set_active", "is_active");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "deterministic"), "set_deterministic", "is_deterministic");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "ignore_time_scale"), "set_ignore_time_scale", "is_ignoring_time_scale");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "reset_on_save", PROPERTY_HINT_NONE, ""), "set_reset_on_save_enabled", "is_reset_on_save_enabled");
 	ADD_PROPERTY(PropertyInfo(Variant::NODE_PATH, "root_node"), "set_root_node", "get_root_node");
 
