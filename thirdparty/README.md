@@ -415,6 +415,21 @@ Files extracted from upstream source:
 - `COPYING`
 
 
+## grisu2
+
+- Upstream: https://github.com/simdjson/simdjson/blob/master/src/to_chars.cpp
+- Version: git (4f4e81668ecb9d4d37fd5f59a1556d492507421d, 2023)
+- License: Apache and MIT
+
+Files extracted from upstream source:
+
+- The `src/to_chars.cpp` file renamed to `grisu2.h` and slightly modified.
+
+Patches:
+
+- `0001-godot-changes.patch` (GH-98750)
+
+
 ## harfbuzz
 
 - Upstream: https://github.com/harfbuzz/harfbuzz
@@ -647,17 +662,13 @@ Patches:
 ## meshoptimizer
 
 - Upstream: https://github.com/zeux/meshoptimizer
-- Version: 0.22 (4affad044571506a5724c9a6f15424f43e86f731, 2024)
+- Version: 0.23 (3e9d1ff3135794f519f3237515277c8d9a3fd3f2, 2025)
 - License: MIT
 
 Files extracted from upstream repository:
 
 - All files in `src/`
 - `LICENSE.md`
-
-Patches:
-
-- `0001-simplifier-distance-only-error.patch` (GH-98529)
 
 
 ## mingw-std-threads
