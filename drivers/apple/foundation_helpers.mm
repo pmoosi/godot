@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  soft_body_3d_gizmo_plugin.h                                           */
+/*  foundation_helpers.mm                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,25 +28,58 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#import "foundation_helpers.h"
 
-#include "editor/scene/3d/node_3d_editor_gizmos.h"
+#import "core/string/ustring.h"
 
-class SoftBody3DGizmoPlugin : public EditorNode3DGizmoPlugin {
-	GDCLASS(SoftBody3DGizmoPlugin, EditorNode3DGizmoPlugin);
+#import <CoreFoundation/CFString.h>
 
-public:
-	bool has_gizmo(Node3D *p_spatial) override;
-	String get_gizmo_name() const override;
-	int get_priority() const override;
-	bool is_selectable_when_hidden() const override;
-	bool can_commit_handle_on_click() const override;
-	void redraw(EditorNode3DGizmo *p_gizmo) override;
+namespace conv {
 
-	String get_handle_name(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
-	Variant get_handle_value(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
-	void commit_handle(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary, const Variant &p_restore, bool p_cancel = false) override;
-	bool is_handle_highlighted(const EditorNode3DGizmo *p_gizmo, int p_id, bool p_secondary) const override;
+NSString *to_nsstring(const String &p_str) {
+	return [[NSString alloc] initWithBytes:(const void *)p_str.ptr()
+									length:p_str.length() * sizeof(char32_t)
+								  encoding:NSUTF32LittleEndianStringEncoding];
+}
 
-	SoftBody3DGizmoPlugin();
-};
+NSString *to_nsstring(const CharString &p_str) {
+	return [[NSString alloc] initWithBytes:(const void *)p_str.ptr()
+									length:p_str.length()
+								  encoding:NSUTF8StringEncoding];
+}
+
+String to_string(NSString *p_str) {
+	CFStringRef str = (__bridge CFStringRef)p_str;
+	CFStringEncoding fastest = CFStringGetFastestEncoding(str);
+	// Sometimes, CFString will return a pointer to it's encoded data,
+	// so we can create the string without allocating intermediate buffers.
+	const char *p = CFStringGetCStringPtr(str, fastest);
+	if (p) {
+		switch (fastest) {
+			case kCFStringEncodingASCII:
+				return String::ascii(Span(p, CFStringGetLength(str)));
+			case kCFStringEncodingUTF8:
+				return String::utf8(p);
+			case kCFStringEncodingUTF32LE:
+				return String::utf32(Span((char32_t *)p, CFStringGetLength(str)));
+			default:
+				break;
+		}
+	}
+
+	CFRange range = CFRangeMake(0, CFStringGetLength(str));
+	CFIndex byte_len = 0;
+	// Try to losslessly convert the string directly into a String's buffer to avoid intermediate allocations.
+	CFIndex n = CFStringGetBytes(str, range, kCFStringEncodingUTF32LE, 0, NO, nil, 0, &byte_len);
+	if (n == range.length) {
+		String res;
+		res.resize_uninitialized((byte_len / sizeof(char32_t)) + 1);
+		res[n] = 0;
+		n = CFStringGetBytes(str, range, kCFStringEncodingUTF32LE, 0, NO, (UInt8 *)res.ptrw(), res.length() * sizeof(char32_t), nil);
+		return res;
+	}
+
+	return String::utf8(p_str.UTF8String);
+}
+
+} //namespace conv
