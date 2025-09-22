@@ -177,7 +177,11 @@ void EditorPropertyText::_text_changed(const String &p_string) {
 
 	// Set tooltip so that the full text is displayed in a tooltip if hovered.
 	// This is useful when using a narrow inspector, as the text can be trimmed otherwise.
-	text->set_tooltip_text(get_tooltip_string(text->get_text()));
+	if (text->is_secret()) {
+		text->set_tooltip_text(get_tooltip_string(text->get_placeholder()));
+	} else {
+		text->set_tooltip_text(get_tooltip_string(text->get_text()));
+	}
 
 	if (string_name) {
 		emit_changed(get_edited_property(), StringName(p_string));
@@ -192,7 +196,11 @@ void EditorPropertyText::update_property() {
 	if (text->get_text() != s) {
 		int caret = text->get_caret_column();
 		text->set_text(s);
-		text->set_tooltip_text(get_tooltip_string(s));
+		if (text->is_secret()) {
+			text->set_tooltip_text(get_tooltip_string(text->get_placeholder()));
+		} else {
+			text->set_tooltip_text(get_tooltip_string(s));
+		}
 		text->set_caret_column(caret);
 	}
 	text->set_editable(!is_read_only());
@@ -835,11 +843,10 @@ void EditorPropertyEnum::setup(const Vector<String> &p_options) {
 	HashMap<int64_t, Vector<String>> items;
 	int64_t current_val = 0;
 	for (const String &option : p_options) {
-		Vector<String> text_split = option.split(":");
-		if (text_split.size() != 1) {
-			current_val = text_split[1].to_int();
+		if (option.get_slice_count(":") != 1) {
+			current_val = option.get_slicec(':', 1).to_int();
 		}
-		items[current_val].push_back(text_split[0]);
+		items[current_val].push_back(option.get_slicec(':', 0));
 		current_val += 1;
 	}
 
