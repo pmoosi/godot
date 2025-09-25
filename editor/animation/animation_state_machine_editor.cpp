@@ -916,7 +916,7 @@ void AnimationNodeStateMachineEditor::_clip_dst_line_to_rect(const Vector2 &p_fr
 
 Ref<StyleBox> AnimationNodeStateMachineEditor::_adjust_stylebox_opacity(Ref<StyleBox> p_style, float p_opacity) {
 	Ref<StyleBox> style = p_style->duplicate();
-	if (style->is_class("StyleBoxFlat")) {
+	if (style->derives_from<StyleBoxFlat>()) {
 		Ref<StyleBoxFlat> flat_style = style;
 		Color bg_color = flat_style->get_bg_color();
 		Color border_color = flat_style->get_border_color();
@@ -952,7 +952,7 @@ void AnimationNodeStateMachineEditor::_state_machine_draw() {
 		travel_path = playback->get_travel_path();
 	}
 
-	if (state_machine_draw->has_focus()) {
+	if (state_machine_draw->has_focus(true)) {
 		state_machine_draw->draw_rect(Rect2(Point2(), state_machine_draw->get_size()), theme_cache.focus_color, false);
 	}
 	int sep = 3 * EDSCALE;

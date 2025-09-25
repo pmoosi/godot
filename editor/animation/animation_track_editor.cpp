@@ -2051,7 +2051,7 @@ AnimationTimelineEdit::AnimationTimelineEdit() {
 	length->set_step(SECOND_DECIMAL);
 	length->set_allow_greater(true);
 	length->set_custom_minimum_size(Vector2(70 * EDSCALE, 0));
-	length->set_hide_slider(true);
+	length->set_control_state(EditorSpinSlider::CONTROL_STATE_HIDE);
 	length->set_tooltip_text(TTR("Animation length (seconds)"));
 	length->set_accessibility_name(TTRC("Animation length (seconds)"));
 	length->connect(SceneStringName(value_changed), callable_mp(this, &AnimationTimelineEdit::_anim_length_changed));
@@ -5445,12 +5445,12 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 	ERR_FAIL_NULL(node);
 	NodePath path_to = root->get_path_to(node, true);
 
-	if (adding_track_type == Animation::TYPE_BLEND_SHAPE && !node->is_class("MeshInstance3D")) {
+	if (adding_track_type == Animation::TYPE_BLEND_SHAPE && !node->derives_from<MeshInstance3D>()) {
 		EditorNode::get_singleton()->show_warning(TTR("Blend Shape tracks only apply to MeshInstance3D nodes."));
 		return;
 	}
 
-	if ((adding_track_type == Animation::TYPE_POSITION_3D || adding_track_type == Animation::TYPE_ROTATION_3D || adding_track_type == Animation::TYPE_SCALE_3D) && !node->is_class("Node3D")) {
+	if ((adding_track_type == Animation::TYPE_POSITION_3D || adding_track_type == Animation::TYPE_ROTATION_3D || adding_track_type == Animation::TYPE_SCALE_3D) && !node->derives_from<Node3D>()) {
 		EditorNode::get_singleton()->show_warning(TTR("Position/Rotation/Scale 3D tracks only apply to 3D-based nodes."));
 		return;
 	}
@@ -5509,7 +5509,7 @@ void AnimationTrackEditor::_new_track_node_selected(NodePath p_path) {
 
 		} break;
 		case Animation::TYPE_ANIMATION: {
-			if (!node->is_class("AnimationPlayer")) {
+			if (!node->derives_from<AnimationPlayer>()) {
 				EditorNode::get_singleton()->show_warning(TTR("Animation tracks can only point to AnimationPlayer nodes."));
 				return;
 			}
@@ -7970,7 +7970,7 @@ AnimationTrackEditor::AnimationTrackEditor() {
 	step->set_min(0);
 	step->set_max(1000000);
 	step->set_step(SECOND_DECIMAL);
-	step->set_hide_slider(true);
+	step->set_control_state(EditorSpinSlider::CONTROL_STATE_HIDE);
 	step->set_custom_minimum_size(Size2(100, 0) * EDSCALE);
 	step->set_tooltip_text(TTR("Animation step value."));
 	step->set_accessibility_name(TTRC("Animation step value."));
