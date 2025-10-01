@@ -975,11 +975,11 @@ Path2DEditor::Path2DEditor() {
 
 Path2DEditor::~Path2DEditor() {
 	ERR_FAIL_NULL(RS::get_singleton());
-	RS::get_singleton()->free(debug_mesh_rid);
-	RS::get_singleton()->free(debug_handle_curve_multimesh_rid);
-	RS::get_singleton()->free(debug_handle_sharp_multimesh_rid);
-	RS::get_singleton()->free(debug_handle_smooth_multimesh_rid);
-	RS::get_singleton()->free(debug_handle_mesh_rid);
+	RS::get_singleton()->free_rid(debug_mesh_rid);
+	RS::get_singleton()->free_rid(debug_handle_curve_multimesh_rid);
+	RS::get_singleton()->free_rid(debug_handle_sharp_multimesh_rid);
+	RS::get_singleton()->free_rid(debug_handle_smooth_multimesh_rid);
+	RS::get_singleton()->free_rid(debug_handle_mesh_rid);
 }
 
 void Path2DEditorPlugin::edit(Object *p_object) {
@@ -987,7 +987,7 @@ void Path2DEditorPlugin::edit(Object *p_object) {
 }
 
 bool Path2DEditorPlugin::handles(Object *p_object) const {
-	return p_object->derives_from<Path2D>();
+	return p_object->is_class("Path2D");
 }
 
 void Path2DEditorPlugin::make_visible(bool p_visible) {

@@ -916,7 +916,7 @@ void AnimationNodeStateMachineEditor::_clip_dst_line_to_rect(const Vector2 &p_fr
 
 Ref<StyleBox> AnimationNodeStateMachineEditor::_adjust_stylebox_opacity(Ref<StyleBox> p_style, float p_opacity) {
 	Ref<StyleBox> style = p_style->duplicate();
-	if (style->derives_from<StyleBoxFlat>()) {
+	if (style->is_class("StyleBoxFlat")) {
 		Ref<StyleBoxFlat> flat_style = style;
 		Color bg_color = flat_style->get_bg_color();
 		Color border_color = flat_style->get_border_color();
@@ -1393,11 +1393,11 @@ void AnimationNodeStateMachineEditor::_notification(int p_what) {
 			if (error_time > 0) {
 				error = error_text;
 				error_time -= get_process_delta_time();
-			} else if (!tree->is_active()) {
-				error = TTR("AnimationTree is inactive.\nActivate to enable playback, check node warnings if activation fails.");
-			} else if (tree->is_state_invalid()) {
-				error = tree->get_invalid_state_reason();
-			} else if (playback.is_null()) {
+			} else {
+				error = tree->get_editor_error_message();
+			}
+
+			if (error.is_empty() && playback.is_null()) {
 				error = vformat(TTR("No playback resource set at path: %s."), AnimationTreeEditor::get_singleton()->get_base_path() + "playback");
 			}
 

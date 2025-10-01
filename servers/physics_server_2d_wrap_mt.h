@@ -54,6 +54,8 @@
 #endif
 
 class PhysicsServer2DWrapMT : public PhysicsServer2D {
+	GDSOFTCLASS(PhysicsServer2DWrapMT, PhysicsServer2D);
+
 	mutable PhysicsServer2D *physics_server_2d = nullptr;
 
 	mutable CommandQueueMT command_queue;
@@ -308,7 +310,7 @@ public:
 
 	/* MISC */
 
-	FUNC1(free, RID);
+	FUNC1(free_rid, RID);
 	FUNC1(set_active, bool);
 
 	virtual void init() override;

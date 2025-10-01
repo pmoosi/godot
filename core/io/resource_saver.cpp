@@ -233,7 +233,7 @@ bool ResourceSaver::add_custom_resource_format_saver(const String &script_path) 
 
 	Ref<Resource> res = ResourceLoader::load(script_path);
 	ERR_FAIL_COND_V(res.is_null(), false);
-	ERR_FAIL_COND_V(!res->derives_from<Script>(), false);
+	ERR_FAIL_COND_V(!res->is_class("Script"), false);
 
 	Ref<Script> s = res;
 	StringName ibt = s->get_instance_base_type();
@@ -255,8 +255,8 @@ void ResourceSaver::add_custom_savers() {
 
 	String custom_saver_base_class = ResourceFormatSaver::get_class_static();
 
-	List<StringName> global_classes;
-	ScriptServer::get_global_class_list(&global_classes);
+	LocalVector<StringName> global_classes;
+	ScriptServer::get_global_class_list(global_classes);
 
 	for (const StringName &class_name : global_classes) {
 		StringName base_class = ScriptServer::get_global_class_native_base(class_name);

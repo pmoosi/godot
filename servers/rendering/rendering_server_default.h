@@ -42,6 +42,8 @@
 #include "servers/server_wrap_mt_common.h"
 
 class RenderingServerDefault : public RenderingServer {
+	GDSOFTCLASS(RenderingServerDefault, RenderingServer);
+
 	enum {
 		MAX_INSTANCE_CULL = 8192,
 		MAX_INSTANCE_LIGHTS = 4,
@@ -1138,7 +1140,7 @@ public:
 
 	/* FREE */
 
-	virtual void free(RID p_rid) override {
+	virtual void free_rid(RID p_rid) override {
 		if (Thread::get_caller_id() == server_thread) {
 			command_queue.flush_if_pending();
 			_free(p_rid);

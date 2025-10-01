@@ -2159,15 +2159,15 @@ void VisualShaderEditor::_update_nodes() {
 
 	// Add GDScript classes.
 	{
-		List<StringName> class_list;
-		ScriptServer::get_global_class_list(&class_list);
+		LocalVector<StringName> class_list;
+		ScriptServer::get_global_class_list(class_list);
 
-		for (const StringName &E : class_list) {
-			if (ScriptServer::get_global_class_native_base(E) == "VisualShaderNodeCustom") {
-				String script_path = ScriptServer::get_global_class_path(E);
+		for (const StringName &class_name : class_list) {
+			if (ScriptServer::get_global_class_native_base(class_name) == "VisualShaderNodeCustom") {
+				String script_path = ScriptServer::get_global_class_path(class_name);
 				Ref<Resource> res = ResourceLoader::load(script_path);
 				ERR_CONTINUE(res.is_null());
-				ERR_CONTINUE(!res->derives_from<Script>());
+				ERR_CONTINUE(!res->is_class("Script"));
 				Ref<Script> scr = Ref<Script>(res);
 
 				Ref<VisualShaderNodeCustom> ref;
@@ -2189,19 +2189,19 @@ void VisualShaderEditor::_update_nodes() {
 
 	// Add GDExtension classes.
 	{
-		List<StringName> class_list;
-		ClassDB::get_class_list(&class_list);
+		LocalVector<StringName> class_list;
+		ClassDB::get_class_list(class_list);
 
-		for (const StringName &E : class_list) {
-			if (ClassDB::get_parent_class(E) == "VisualShaderNodeCustom") {
-				Object *instance = ClassDB::instantiate(E);
+		for (const StringName &class_name : class_list) {
+			if (ClassDB::get_parent_class(class_name) == "VisualShaderNodeCustom") {
+				Object *instance = ClassDB::instantiate(class_name);
 				Ref<VisualShaderNodeCustom> ref = Object::cast_to<VisualShaderNodeCustom>(instance);
 				ERR_CONTINUE(ref.is_null());
 				if (!ref->is_available(visual_shader->get_mode(), get_current_shader_type())) {
 					continue;
 				}
 				Dictionary dict = get_custom_node_data(ref);
-				dict["type"] = E;
+				dict["type"] = class_name;
 				dict["script"] = Ref<Script>();
 
 				String key;
@@ -8126,19 +8126,19 @@ public:
 Control *VisualShaderNodePluginDefault::create_editor(const Ref<Resource> &p_parent_resource, const Ref<VisualShaderNode> &p_node) {
 	Ref<VisualShader> p_shader = Ref<VisualShader>(p_parent_resource.ptr());
 
-	if (p_shader.is_valid() && (p_node->derives_from<VisualShaderNodeVaryingGetter>() || p_node->derives_from<VisualShaderNodeVaryingSetter>())) {
+	if (p_shader.is_valid() && (p_node->is_class("VisualShaderNodeVaryingGetter") || p_node->is_class("VisualShaderNodeVaryingSetter"))) {
 		VisualShaderNodePluginVaryingEditor *editor = memnew(VisualShaderNodePluginVaryingEditor);
 		editor->setup(vseditor, p_node, vseditor->get_current_shader_type());
 		return editor;
 	}
 
-	if (p_node->derives_from<VisualShaderNodeParameterRef>()) {
+	if (p_node->is_class("VisualShaderNodeParameterRef")) {
 		VisualShaderNodePluginParameterRefEditor *editor = memnew(VisualShaderNodePluginParameterRefEditor);
 		editor->setup(vseditor, p_node);
 		return editor;
 	}
 
-	if (p_node->derives_from<VisualShaderNodeInput>()) {
+	if (p_node->is_class("VisualShaderNodeInput")) {
 		VisualShaderNodePluginInputEditor *editor = memnew(VisualShaderNodePluginInputEditor);
 		editor->setup(vseditor, p_node);
 		return editor;
@@ -8316,7 +8316,7 @@ bool EditorInspectorVisualShaderModePlugin::can_handle(Object *p_object) {
 }
 
 bool EditorInspectorVisualShaderModePlugin::parse_property(Object *p_object, const Variant::Type p_type, const String &p_path, const PropertyHint p_hint, const String &p_hint_text, const BitField<PropertyUsageFlags> p_usage, const bool p_wide) {
-	if (p_path == "mode" && p_object->derives_from<VisualShader>() && p_type == Variant::INT) {
+	if (p_path == "mode" && p_object->is_class("VisualShader") && p_type == Variant::INT) {
 		EditorPropertyVisualShaderMode *mode_editor = memnew(EditorPropertyVisualShaderMode);
 		Vector<String> options = p_hint_text.split(",");
 		mode_editor->setup(options);
