@@ -42,8 +42,8 @@
 #include "scene/main/window.h"
 #include "scene/theme/theme_db.h"
 #include "scene/theme/theme_owner.h"
-#include "servers/rendering_server.h"
-#include "servers/text_server.h"
+#include "servers/rendering/rendering_server.h"
+#include "servers/text/text_server.h"
 
 #ifdef TOOLS_ENABLED
 #include "editor/scene/gui/control_editor_plugin.h"
@@ -4190,7 +4190,7 @@ void Control::_bind_methods() {
 	StringBuilder builder;
 	builder.append(TTRC("Custom"));
 	builder.append(":-1");
-	for (size_t i = 0; i < std::size(anchors_presets); i++) {
+	for (size_t i = 0; i < std_size(anchors_presets); i++) {
 		builder.append(",");
 		builder.append(anchors_presets[i].name);
 		builder.append(":");
