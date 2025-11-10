@@ -746,6 +746,13 @@ Error Main::test_setup() {
 	physics_server_2d_manager = memnew(PhysicsServer2DManager);
 #endif // PHYSICS_2D_DISABLED
 
+#ifndef NAVIGATION_2D_DISABLED
+	NavigationServer2DManager::initialize_server_manager();
+#endif // NAVIGATION_2D_DISABLED
+#ifndef NAVIGATION_3D_DISABLED
+	NavigationServer3DManager::initialize_server_manager();
+#endif // NAVIGATION_3D_DISABLED
+
 	// From `Main::setup2()`.
 	register_early_core_singletons();
 	initialize_modules(MODULE_INITIALIZATION_LEVEL_CORE);
@@ -765,7 +772,7 @@ Error Main::test_setup() {
 	if (!locale.is_empty()) {
 		translation_server->set_locale(locale);
 	}
-	translation_server->load_translations();
+	translation_server->load_project_translations(translation_server->get_main_domain());
 	ResourceLoader::load_translation_remaps(); //load remaps for resources
 
 	// Initialize ThemeDB early so that scene types can register their theme items.
@@ -863,9 +870,11 @@ void Main::test_cleanup() {
 
 #ifndef NAVIGATION_2D_DISABLED
 	NavigationServer2DManager::finalize_server();
+	NavigationServer2DManager::finalize_server_manager();
 #endif // NAVIGATION_2D_DISABLED
 #ifndef NAVIGATION_3D_DISABLED
 	NavigationServer3DManager::finalize_server();
+	NavigationServer3DManager::finalize_server_manager();
 #endif // NAVIGATION_3D_DISABLED
 
 	GDExtensionManager::get_singleton()->deinitialize_extensions(GDExtension::INITIALIZATION_LEVEL_SERVERS);
@@ -3018,6 +3027,13 @@ Error Main::setup2(bool p_show_boot_logo) {
 	physics_server_2d_manager = memnew(PhysicsServer2DManager);
 #endif // PHYSICS_2D_DISABLED
 
+#ifndef NAVIGATION_2D_DISABLED
+	NavigationServer2DManager::initialize_server_manager();
+#endif // NAVIGATION_2D_DISABLED
+#ifndef NAVIGATION_3D_DISABLED
+	NavigationServer3DManager::initialize_server_manager();
+#endif // NAVIGATION_3D_DISABLED
+
 	register_server_types();
 	{
 		OS::get_singleton()->benchmark_begin_measure("Servers", "Modules and Extensions");
@@ -3440,7 +3456,7 @@ Error Main::setup2(bool p_show_boot_logo) {
 		if (!locale.is_empty()) {
 			translation_server->set_locale(locale);
 		}
-		translation_server->load_translations();
+		translation_server->load_project_translations(translation_server->get_main_domain());
 		ResourceLoader::load_translation_remaps(); //load remaps for resources
 
 		OS::get_singleton()->benchmark_end_measure("Startup", "Translations and Remaps");
@@ -4259,7 +4275,7 @@ int Main::start() {
 						// Cache the scene reference before loading it (for cyclic references)
 						Ref<PackedScene> scn;
 						scn.instantiate();
-						scn->set_path(info.path);
+						scn->set_path(ResourceUID::ensure_path(info.path));
 						scn->reload_from_file();
 						ERR_CONTINUE_MSG(scn.is_null(), vformat("Failed to instantiate an autoload, can't load from path: %s.", info.path));
 
@@ -4979,9 +4995,11 @@ void Main::cleanup(bool p_force) {
 // Before deinitializing server extensions, finalize servers which may be loaded as extensions.
 #ifndef NAVIGATION_2D_DISABLED
 	NavigationServer2DManager::finalize_server();
+	NavigationServer2DManager::finalize_server_manager();
 #endif // NAVIGATION_2D_DISABLED
 #ifndef NAVIGATION_3D_DISABLED
 	NavigationServer3DManager::finalize_server();
+	NavigationServer3DManager::finalize_server_manager();
 #endif // NAVIGATION_3D_DISABLED
 	finalize_physics();
 
