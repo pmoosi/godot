@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  translation_po.h                                                      */
+/*  android_editor_gradle_runner.h                                        */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -30,8 +30,47 @@
 
 #pragma once
 
-#include "core/string/translation.h"
+#ifdef ANDROID_ENABLED
 
-class TranslationPO : public Translation {
-	GDCLASS(TranslationPO, Translation);
+#include "core/object/object.h"
+
+class ConfirmationDialog;
+class RichTextLabel;
+
+class AndroidEditorGradleRunner : public Object {
+	GDCLASS(AndroidEditorGradleRunner, Object);
+
+	RichTextLabel *output_label = nullptr;
+	ConfirmationDialog *output_dialog = nullptr;
+
+	enum State {
+		STATE_IDLE,
+		STATE_BUILDING,
+		STATE_CLEANING,
+	};
+	State state = STATE_IDLE;
+
+	String project_path;
+	String build_path;
+	List<String> gradle_build_args;
+	List<String> gradle_copy_args;
+	int64_t job_id;
+
+	void _android_gradle_build_connect();
+	void _android_gradle_build_disconnect();
+	void _android_gradle_build_output(int p_type, const String &p_line);
+	void _android_gradle_build_build();
+	void _android_gradle_build_build_callback(int p_exit_code);
+	void _android_gradle_build_copy();
+	void _android_gradle_build_copy_callback(int p_exit_code);
+	void _android_gradle_build_clean_project(bool p_was_successful);
+	void _android_gradle_build_clean_project_callback();
+
+	void _android_gradle_build_failed(const String &p_msg = String());
+	void _android_gradle_build_cancel();
+
+public:
+	void run_gradle(const String &p_project_path, const String &p_build_path, const List<String> &p_gradle_build_args, const List<String> &p_gradle_copy_args);
 };
+
+#endif // ANDROID_ENABLED

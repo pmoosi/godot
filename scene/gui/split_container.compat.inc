@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  translation_po.cpp                                                    */
+/*  split_container.compat.inc                                            */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -28,7 +28,14 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "translation_po.h"
+#ifndef DISABLE_DEPRECATED
 
-// This file is intentionally left empty.
-// It makes sure that `TranslationPO` exists, for compatibility.
+void SplitContainer::_clamp_split_offset_compat_90411() {
+	clamp_split_offset(0);
+}
+
+void SplitContainer::_bind_compatibility_methods() {
+	ClassDB::bind_compatibility_method(D_METHOD("clamp_split_offset"), &SplitContainer::_clamp_split_offset_compat_90411);
+}
+
+#endif

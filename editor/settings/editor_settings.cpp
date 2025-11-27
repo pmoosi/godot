@@ -101,7 +101,7 @@ bool EditorSettings::_set_only(const StringName &p_name, const Variant &p_value)
 			Ref<Shortcut> sc;
 			sc.instantiate();
 			sc->set_events(shortcut_events);
-			add_shortcut(shortcut_name, sc);
+			_add_shortcut_default(shortcut_name, sc);
 		}
 
 		return false;
@@ -444,6 +444,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	// Editor
 	EDITOR_SETTING(Variant::BOOL, PROPERTY_HINT_NONE, "interface/editor/localize_settings", true, "")
 	EDITOR_SETTING_BASIC(Variant::INT, PROPERTY_HINT_ENUM, "interface/editor/dock_tab_style", 0, "Text Only,Icon Only,Text and Icon")
+	EDITOR_SETTING_BASIC(Variant::INT, PROPERTY_HINT_ENUM, "interface/editor/bottom_dock_tab_style", 0, "Text Only,Icon Only,Text and Icon")
 	EDITOR_SETTING_USAGE(Variant::INT, PROPERTY_HINT_ENUM, "interface/editor/ui_layout_direction", 0, "Based on Application Locale,Left-to-Right,Right-to-Left,Based on System Locale", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED)
 
 	// Display what the Auto display scale setting effectively corresponds to.
@@ -653,6 +654,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	// On save
 	_initial_set("filesystem/on_save/compress_binary_resources", true);
 	_initial_set("filesystem/on_save/safe_save_on_backup_then_rename", true);
+	_initial_set("filesystem/on_save/warn_on_saving_large_text_resources", true);
 
 	// EditorFileServer
 	_initial_set("filesystem/file_server/port", 6010);
@@ -902,7 +904,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	EDITOR_SETTING_USAGE(Variant::COLOR, PROPERTY_HINT_NONE, "editors/3d_gizmos/gizmo_colors/ik_chain", Color(0.6, 0.9, 0.8), "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED)
 	_initial_set("editors/3d_gizmos/gizmo_settings/bone_axis_length", (float)0.1);
 	EDITOR_SETTING(Variant::INT, PROPERTY_HINT_ENUM, "editors/3d_gizmos/gizmo_settings/bone_shape", 1, "Wire,Octahedron");
-	EDITOR_SETTING_USAGE(Variant::FLOAT, PROPERTY_HINT_NONE, "editors/3d_gizmos/gizmo_settings/path3d_tilt_disk_size", 0.8, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED)
+	EDITOR_SETTING_USAGE(Variant::FLOAT, PROPERTY_HINT_NONE, "editors/3d_gizmos/gizmo_settings/path3d_tilt_disk_size", 0.8, "", PROPERTY_USAGE_DEFAULT)
 	EDITOR_SETTING_USAGE(Variant::FLOAT, PROPERTY_HINT_RANGE, "editors/3d_gizmos/gizmo_settings/lightmap_gi_probe_size", 0.4, "0.0,1.0,0.001,or_greater", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_RESTART_IF_CHANGED)
 
 	// If a line is a multiple of this, it uses the primary grid color.
