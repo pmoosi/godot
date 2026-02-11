@@ -679,6 +679,7 @@ public:
 	enum ToolOptions {
 		TOOL_OPT_LOCAL_COORDS,
 		TOOL_OPT_USE_SNAP,
+		TOOL_OPT_USE_TRACKBALL,
 		TOOL_OPT_MAX
 	};
 
@@ -686,6 +687,9 @@ public:
 		TRANSFORM_MODE_GLOBAL = 1,
 		TRANSFORM_MODE_LOCAL = 2,
 	};
+
+	real_t gizmo_view_rotation_scale = 1.0;
+	real_t gizmo_view_rotation_shrink = 1.0;
 
 private:
 	EditorSelection *editor_selection = nullptr;
@@ -700,7 +704,7 @@ private:
 
 	/////
 
-	ToolMode tool_mode;
+	ToolMode tool_mode = TOOL_MODE_TRANSFORM;
 
 	RID origin_mesh;
 	RID origin_multimesh;
@@ -778,6 +782,7 @@ private:
 		MENU_TOOL_LIST_SELECT,
 		MENU_TOOL_LOCAL_COORDS,
 		MENU_TOOL_USE_SNAP,
+		MENU_TOOL_USE_TRACKBALL,
 		MENU_TRANSFORM_CONFIGURE_SNAP,
 		MENU_TRANSFORM_DIALOG,
 		MENU_VIEW_USE_1_VIEWPORT,
@@ -811,11 +816,13 @@ private:
 	ConfirmationDialog *xform_dialog = nullptr;
 	ConfirmationDialog *settings_dialog = nullptr;
 
-	bool snap_enabled;
-	bool snap_key_enabled;
+	bool snap_enabled = false;
+	bool snap_key_enabled = false;
 	EditorSpinSlider *snap_translate = nullptr;
 	EditorSpinSlider *snap_rotate = nullptr;
 	EditorSpinSlider *snap_scale = nullptr;
+
+	bool trackball_enabled = false;
 
 	LineEdit *xform_translate[3];
 	LineEdit *xform_rotate[3];
@@ -995,6 +1002,8 @@ public:
 	real_t get_translate_snap() const;
 	real_t get_rotate_snap() const;
 	real_t get_scale_snap() const;
+
+	bool is_trackball_enabled() const { return trackball_enabled; }
 
 	Ref<ArrayMesh> get_move_gizmo(int idx) const { return move_gizmo[idx]; }
 	Ref<ArrayMesh> get_axis_gizmo(int idx) const { return axis_gizmo[idx]; }
