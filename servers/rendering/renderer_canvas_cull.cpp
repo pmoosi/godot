@@ -2213,6 +2213,13 @@ void RendererCanvasCull::canvas_light_set_directional_distance(RID p_light, floa
 	clight->directional_distance = p_distance;
 }
 
+void RendererCanvasCull::canvas_light_set_render_first(RID p_light, bool p_render_first) {
+	RendererCanvasRender::Light *clight = canvas_light_owner.get_or_null(p_light);
+	ERR_FAIL_NULL(clight);
+
+	clight->render_first = p_render_first;
+}
+
 void RendererCanvasCull::canvas_light_set_blend_mode(RID p_light, RS::CanvasLightBlendMode p_mode) {
 	RendererCanvasRender::Light *clight = canvas_light_owner.get_or_null(p_light);
 	ERR_FAIL_NULL(clight);

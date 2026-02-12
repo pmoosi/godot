@@ -325,6 +325,7 @@ public:
 	void canvas_light_set_item_cull_mask(RID p_light, int p_mask);
 	void canvas_light_set_item_shadow_cull_mask(RID p_light, int p_mask);
 	void canvas_light_set_directional_distance(RID p_light, float p_distance);
+	void canvas_light_set_render_first(RID p_light, bool p_render_first);
 
 	void canvas_light_set_blend_mode(RID p_light, RS::CanvasLightBlendMode p_mode);
 

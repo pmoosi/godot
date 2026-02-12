@@ -142,6 +142,7 @@ class PointLight2D : public Light2D {
 
 private:
 	real_t _scale = 1.0;
+	bool render_first = false;
 	Ref<Texture2D> texture;
 	Vector2 texture_offset;
 
@@ -176,6 +177,9 @@ public:
 
 	void set_texture_scale(real_t p_scale);
 	real_t get_texture_scale() const;
+
+	void set_render_first(bool p_render_first);
+	bool is_render_first() const;
 
 	PackedStringArray get_configuration_warnings() const override;
 

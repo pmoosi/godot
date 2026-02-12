@@ -452,6 +452,15 @@ real_t PointLight2D::get_texture_scale() const {
 	return _scale;
 }
 
+void PointLight2D::set_render_first(bool p_render_first) {
+	render_first = p_render_first;
+	RS::get_singleton()->canvas_light_set_render_first(_get_light(), render_first);
+}
+
+bool PointLight2D::is_render_first() const {
+	return render_first;
+}
+
 #ifndef DISABLE_DEPRECATED
 bool PointLight2D::_set(const StringName &p_name, const Variant &p_value) {
 	if (p_name == "mode" && p_value.is_num()) { // Compatibility with Godot 3.x.
@@ -473,15 +482,20 @@ void PointLight2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_texture_scale", "texture_scale"), &PointLight2D::set_texture_scale);
 	ClassDB::bind_method(D_METHOD("get_texture_scale"), &PointLight2D::get_texture_scale);
 
+	ClassDB::bind_method(D_METHOD("set_render_first", "render_first"), &PointLight2D::set_render_first);
+	ClassDB::bind_method(D_METHOD("is_render_first"), &PointLight2D::is_render_first);
+
 	// Only allow texture types that display correctly.
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "texture", PROPERTY_HINT_RESOURCE_TYPE, "Texture2D,-AnimatedTexture,-AtlasTexture,-CameraTexture,-CanvasTexture,-MeshTexture,-Texture2DRD,-ViewportTexture"), "set_texture", "get_texture");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "offset", PROPERTY_HINT_NONE, "suffix:px"), "set_texture_offset", "get_texture_offset");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "texture_scale", PROPERTY_HINT_RANGE, "0.01,50,0.01"), "set_texture_scale", "get_texture_scale");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "render_first"), "set_render_first", "is_render_first");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "height", PROPERTY_HINT_RANGE, "0,1024,1,or_greater,suffix:px"), "set_height", "get_height");
 }
 
 PointLight2D::PointLight2D() {
 	RS::get_singleton()->canvas_light_set_mode(_get_light(), RS::CANVAS_LIGHT_MODE_POINT);
+	RS::get_singleton()->canvas_light_set_render_first(_get_light(), render_first);
 	set_hide_clip_children(true);
 }
 

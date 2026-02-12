@@ -16,6 +16,10 @@
 		<member name="offset" type="Vector2" setter="set_texture_offset" getter="get_texture_offset" default="Vector2(0, 0)">
 			The offset of the light's [member texture].
 		</member>
+		<member name="render_first" type="bool" setter="set_render_first" getter="is_render_first" default="false">
+			If [code]true[/code], this [PointLight2D] is processed before non-prioritized point lights when rendering a canvas.
+			[b]Note:[/b] This only affects point-light processing order and does not guarantee the relative order between multiple prioritized point lights.
+		</member>
 		<member name="texture" type="Texture2D" setter="set_texture" getter="get_texture">
 			[Texture2D] used for the light's appearance.
 		</member>

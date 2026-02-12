@@ -72,6 +72,7 @@ public:
 		Vector2 texture_offset;
 		RID canvas;
 		bool use_shadow;
+		bool render_first;
 		int shadow_buffer_size;
 		RS::CanvasLightShadowFilter shadow_filter;
 		Color shadow_color;
@@ -119,6 +120,7 @@ public:
 			directional_next_ptr = nullptr;
 			filter_next_ptr = nullptr;
 			use_shadow = false;
+			render_first = false;
 			shadow_buffer_size = 2048;
 			shadow_filter = RS::CANVAS_LIGHT_FILTER_NONE;
 			shadow_smooth = 0.0;

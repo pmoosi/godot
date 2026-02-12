@@ -1081,6 +1081,7 @@ public:
 	FUNC2(canvas_light_set_item_cull_mask, RID, int)
 	FUNC2(canvas_light_set_item_shadow_cull_mask, RID, int)
 	FUNC2(canvas_light_set_directional_distance, RID, float)
+	FUNC2(canvas_light_set_render_first, RID, bool)
 
 	FUNC2(canvas_light_set_blend_mode, RID, CanvasLightBlendMode)
 

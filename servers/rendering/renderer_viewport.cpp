@@ -665,15 +665,33 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 			Transform2D xform = _canvas_get_transform(p_viewport, canvas, E.value, clip_rect.size);
 
 			RendererCanvasRender::Light *canvas_lights = nullptr;
+			RendererCanvasRender::Light *canvas_lights_pref = nullptr;
+			RendererCanvasRender::Light *canvas_lights_pref_tail = nullptr;
+			RendererCanvasRender::Light *canvas_lights_norm = nullptr;
 			RendererCanvasRender::Light *canvas_directional_lights = nullptr;
 
 			RendererCanvasRender::Light *ptr = lights;
 			while (ptr) {
 				if (E.value->layer >= ptr->layer_min && E.value->layer <= ptr->layer_max) {
-					ptr->next_ptr = canvas_lights;
-					canvas_lights = ptr;
+					if (ptr->render_first) {
+						ptr->next_ptr = canvas_lights_pref;
+						canvas_lights_pref = ptr;
+						if (!canvas_lights_pref_tail) {
+							canvas_lights_pref_tail = ptr;
+						}
+					} else {
+						ptr->next_ptr = canvas_lights_norm;
+						canvas_lights_norm = ptr;
+					}
 				}
 				ptr = ptr->filter_next_ptr;
+			}
+
+			if (canvas_lights_pref) {
+				canvas_lights = canvas_lights_pref;
+				canvas_lights_pref_tail->next_ptr = canvas_lights_norm;
+			} else {
+				canvas_lights = canvas_lights_norm;
 			}
 
 			ptr = directional_lights;

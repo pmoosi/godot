@@ -1681,6 +1681,7 @@ public:
 	virtual void canvas_light_set_item_shadow_cull_mask(RID p_light, int p_mask) = 0;
 
 	virtual void canvas_light_set_directional_distance(RID p_light, float p_distance) = 0;
+	virtual void canvas_light_set_render_first(RID p_light, bool p_render_first) = 0;
 
 	virtual void canvas_light_set_texture_scale(RID p_light, float p_scale) = 0;
 	virtual void canvas_light_set_texture(RID p_light, RID p_texture) = 0;

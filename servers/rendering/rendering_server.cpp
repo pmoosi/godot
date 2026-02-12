@@ -3458,6 +3458,7 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("canvas_light_set_item_cull_mask", "light", "mask"), &RenderingServer::canvas_light_set_item_cull_mask);
 	ClassDB::bind_method(D_METHOD("canvas_light_set_item_shadow_cull_mask", "light", "mask"), &RenderingServer::canvas_light_set_item_shadow_cull_mask);
 	ClassDB::bind_method(D_METHOD("canvas_light_set_mode", "light", "mode"), &RenderingServer::canvas_light_set_mode);
+	ClassDB::bind_method(D_METHOD("canvas_light_set_render_first", "light", "render_first"), &RenderingServer::canvas_light_set_render_first);
 	ClassDB::bind_method(D_METHOD("canvas_light_set_shadow_enabled", "light", "enabled"), &RenderingServer::canvas_light_set_shadow_enabled);
 	ClassDB::bind_method(D_METHOD("canvas_light_set_shadow_filter", "light", "filter"), &RenderingServer::canvas_light_set_shadow_filter);
 	ClassDB::bind_method(D_METHOD("canvas_light_set_shadow_color", "light", "color"), &RenderingServer::canvas_light_set_shadow_color);
