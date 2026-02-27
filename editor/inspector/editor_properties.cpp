@@ -32,6 +32,7 @@
 
 #include "core/config/project_settings.h"
 #include "core/input/input_map.h"
+#include "core/object/class_db.h"
 #include "core/string/translation_server.h"
 #include "editor/docks/inspector_dock.h"
 #include "editor/docks/scene_tree_dock.h"
@@ -1561,6 +1562,12 @@ void EditorPropertyInteger::_value_changed(int64_t val) {
 	emit_changed(get_edited_property(), val);
 }
 
+void EditorPropertyInteger::set_deferred_drag_mode_enabled(bool p_enabled) {
+	EditorProperty::set_deferred_drag_mode_enabled(p_enabled);
+
+	spin->set_deferred_drag_mode_enabled(p_enabled);
+}
+
 void EditorPropertyInteger::update_property() {
 	int64_t val = get_edited_property_display_value();
 	spin->set_value_no_signal(val);
@@ -1696,6 +1703,12 @@ void EditorPropertyFloat::_value_changed(double val) {
 		val = Math::deg_to_rad(val);
 	}
 	emit_changed(get_edited_property(), val);
+}
+
+void EditorPropertyFloat::set_deferred_drag_mode_enabled(bool p_enabled) {
+	EditorProperty::set_deferred_drag_mode_enabled(p_enabled);
+
+	spin->set_deferred_drag_mode_enabled(p_enabled);
 }
 
 void EditorPropertyFloat::update_property() {

@@ -31,6 +31,7 @@
 #include "script_editor_base.h"
 
 #include "core/io/json.h"
+#include "core/object/class_db.h"
 #include "editor/editor_node.h"
 #include "editor/script/script_editor_plugin.h"
 #include "editor/script/syntax_highlighters.h"
@@ -644,8 +645,6 @@ TextEditorBase::TextEditorBase() {
 	context_menu = memnew(PopupMenu);
 	context_menu->connect(SceneStringName(id_pressed), callable_mp(this, &TextEditorBase::_edit_option));
 	add_child(context_menu);
-
-	edit_hb = memnew(HBoxContainer);
 
 	goto_line_popup = memnew(GotoLinePopup);
 	add_child(goto_line_popup);
