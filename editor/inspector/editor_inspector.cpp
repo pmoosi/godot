@@ -63,6 +63,7 @@
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/style_box_flat.h"
 #include "scene/scene_string_names.h"
+#include "servers/display/accessibility_server.h"
 #include "servers/rendering/rendering_server.h"
 
 void EditorInspectorActionButton::_notification(int p_what) {
@@ -294,18 +295,18 @@ void EditorProperty::_notification(int p_what) {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
-			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
+			AccessibilityServer::get_singleton()->update_set_role(ae, AccessibilityServerEnums::AccessibilityRole::ROLE_BUTTON);
 
-			DisplayServer::get_singleton()->accessibility_update_set_name(ae, vformat(TTR("Property: %s"), label));
-			DisplayServer::get_singleton()->accessibility_update_set_value(ae, vformat(TTR("Property: %s"), label));
+			AccessibilityServer::get_singleton()->update_set_name(ae, vformat(TTR("Property: %s"), label));
+			AccessibilityServer::get_singleton()->update_set_value(ae, vformat(TTR("Property: %s"), label));
 
-			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_MENU);
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &EditorProperty::_accessibility_action_menu));
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_CLICK, callable_mp(this, &EditorProperty::_accessibility_action_click));
+			AccessibilityServer::get_singleton()->update_set_popup_type(ae, AccessibilityServerEnums::AccessibilityPopupType::POPUP_MENU);
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &EditorProperty::_accessibility_action_menu));
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_CLICK, callable_mp(this, &EditorProperty::_accessibility_action_click));
 
-			DisplayServer::get_singleton()->accessibility_update_set_flag(ae, DisplayServer::AccessibilityFlags::FLAG_READONLY, read_only);
+			AccessibilityServer::get_singleton()->update_set_flag(ae, AccessibilityServerEnums::AccessibilityFlags::FLAG_READONLY, read_only);
 			if (checkable) {
-				DisplayServer::get_singleton()->accessibility_update_set_checked(ae, checked);
+				AccessibilityServer::get_singleton()->update_set_checked(ae, checked);
 			}
 		} break;
 
@@ -1740,13 +1741,13 @@ void EditorInspectorCategory::_notification(int p_what) {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
-			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
+			AccessibilityServer::get_singleton()->update_set_role(ae, AccessibilityServerEnums::AccessibilityRole::ROLE_BUTTON);
 
-			DisplayServer::get_singleton()->accessibility_update_set_name(ae, vformat(TTR("Category: %s"), label));
-			DisplayServer::get_singleton()->accessibility_update_set_value(ae, vformat(TTR("Category: %s"), label));
+			AccessibilityServer::get_singleton()->update_set_name(ae, vformat(TTR("Category: %s"), label));
+			AccessibilityServer::get_singleton()->update_set_value(ae, vformat(TTR("Category: %s"), label));
 
-			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_MENU);
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &EditorInspectorCategory::_accessibility_action_menu));
+			AccessibilityServer::get_singleton()->update_set_popup_type(ae, AccessibilityServerEnums::AccessibilityPopupType::POPUP_MENU);
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &EditorInspectorCategory::_accessibility_action_menu));
 		} break;
 
 		case NOTIFICATION_TRANSLATION_CHANGED: {
@@ -2135,12 +2136,12 @@ void EditorInspectorSection::_notification(int p_what) {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
-			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
+			AccessibilityServer::get_singleton()->update_set_role(ae, AccessibilityServerEnums::AccessibilityRole::ROLE_BUTTON);
 
-			DisplayServer::get_singleton()->accessibility_update_set_name(ae, vformat(TTR("Section: %s"), label));
-			DisplayServer::get_singleton()->accessibility_update_set_value(ae, vformat(TTR("Section: %s"), label));
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_COLLAPSE, callable_mp(this, &EditorInspectorSection::_accessibility_action_collapse));
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_EXPAND, callable_mp(this, &EditorInspectorSection::_accessibility_action_expand));
+			AccessibilityServer::get_singleton()->update_set_name(ae, vformat(TTR("Section: %s"), label));
+			AccessibilityServer::get_singleton()->update_set_value(ae, vformat(TTR("Section: %s"), label));
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_COLLAPSE, callable_mp(this, &EditorInspectorSection::_accessibility_action_collapse));
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_EXPAND, callable_mp(this, &EditorInspectorSection::_accessibility_action_expand));
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
@@ -2381,8 +2382,8 @@ void EditorInspectorSection::_notification(int p_what) {
 		} break;
 
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
-			if (EditorSettings::get_singleton()->check_changed_settings_in_group("interface/editor")) {
-				dropping_unfold_timer->set_wait_time(EDITOR_GET("interface/editor/dragging_hover_wait_seconds"));
+			if (EditorSettings::get_singleton()->check_changed_settings_in_group("interface/editor/timers")) {
+				dropping_unfold_timer->set_wait_time(EDITOR_GET("interface/editor/timers/dragging_hover_wait_seconds"));
 			}
 		} break;
 	}
@@ -2837,7 +2838,7 @@ EditorInspectorSection::EditorInspectorSection() {
 	vbox->set_theme_type_variation(SNAME("EditorPropertyContainer"));
 
 	dropping_unfold_timer = memnew(Timer);
-	dropping_unfold_timer->set_wait_time(EDITOR_GET("interface/editor/dragging_hover_wait_seconds"));
+	dropping_unfold_timer->set_wait_time(EDITOR_GET("interface/editor/timers/dragging_hover_wait_seconds"));
 	dropping_unfold_timer->set_one_shot(true);
 	add_child(dropping_unfold_timer);
 	dropping_unfold_timer->connect("timeout", callable_mp(this, &EditorInspectorSection::unfold));
@@ -3536,13 +3537,13 @@ void ArrayPanelContainer::_notification(int p_what) {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
-			DisplayServer::get_singleton()->accessibility_update_set_role(ae, DisplayServer::AccessibilityRole::ROLE_BUTTON);
+			AccessibilityServer::get_singleton()->update_set_role(ae, AccessibilityServerEnums::AccessibilityRole::ROLE_BUTTON);
 
-			DisplayServer::get_singleton()->accessibility_update_set_name(ae, get_meta("text"));
-			DisplayServer::get_singleton()->accessibility_update_set_value(ae, get_meta("text"));
+			AccessibilityServer::get_singleton()->update_set_name(ae, get_meta("text"));
+			AccessibilityServer::get_singleton()->update_set_value(ae, get_meta("text"));
 
-			DisplayServer::get_singleton()->accessibility_update_set_popup_type(ae, DisplayServer::AccessibilityPopupType::POPUP_MENU);
-			DisplayServer::get_singleton()->accessibility_update_add_action(ae, DisplayServer::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &ArrayPanelContainer::_accessibility_action_menu));
+			AccessibilityServer::get_singleton()->update_set_popup_type(ae, AccessibilityServerEnums::AccessibilityPopupType::POPUP_MENU);
+			AccessibilityServer::get_singleton()->update_add_action(ae, AccessibilityServerEnums::AccessibilityAction::ACTION_SHOW_CONTEXT_MENU, callable_mp(this, &ArrayPanelContainer::_accessibility_action_menu));
 		} break;
 	}
 }
@@ -3557,8 +3558,8 @@ void EditorInspectorArray::_notification(int p_what) {
 			RID ae = get_accessibility_element();
 			ERR_FAIL_COND(ae.is_null());
 
-			DisplayServer::get_singleton()->accessibility_update_set_name(ae, vformat(TTR("Array: %s"), get_label()));
-			DisplayServer::get_singleton()->accessibility_update_set_value(ae, vformat(TTR("Array: %s"), get_label()));
+			AccessibilityServer::get_singleton()->update_set_name(ae, vformat(TTR("Array: %s"), get_label()));
+			AccessibilityServer::get_singleton()->update_set_value(ae, vformat(TTR("Array: %s"), get_label()));
 		} break;
 
 		case NOTIFICATION_THEME_CHANGED: {
@@ -6043,7 +6044,7 @@ void EditorInspector::_notification(int p_what) {
 		} break;
 
 		case EditorSettings::NOTIFICATION_EDITOR_SETTINGS_CHANGED: {
-			if (use_settings_name_style && EditorSettings::get_singleton()->check_changed_settings_in_group("interface/editor/localize_settings")) {
+			if (use_settings_name_style && EditorSettings::get_singleton()->check_changed_settings_in_group("interface/editor/localization/localize_settings")) {
 				EditorPropertyNameProcessor::Style style = EditorPropertyNameProcessor::get_settings_style();
 				if (property_name_style != style) {
 					property_name_style = style;
