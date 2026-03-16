@@ -51,9 +51,9 @@ void class_db_api_to_json(const String &p_output_file, ClassDB::APIType p_api) {
 		}
 
 		Dictionary class_dict;
-		classes_dict[t->name] = class_dict;
+		classes_dict[t->gdtype->get_name()] = class_dict;
 
-		class_dict["inherits"] = t->inherits;
+		class_dict["inherits"] = t->gdtype->get_super_type_name();
 
 		{ //methods
 
@@ -122,7 +122,7 @@ void class_db_api_to_json(const String &p_output_file, ClassDB::APIType p_api) {
 
 			List<StringName> snames;
 
-			for (const KeyValue<StringName, int64_t> &F : t->constant_map) {
+			for (const KeyValue<StringName, int64_t> &F : t->gdtype->get_integer_constant_map(true)) {
 				snames.push_back(F.key);
 			}
 
@@ -135,7 +135,7 @@ void class_db_api_to_json(const String &p_output_file, ClassDB::APIType p_api) {
 				constants.push_back(constant_dict);
 
 				constant_dict["name"] = F;
-				constant_dict["value"] = t->constant_map[F];
+				constant_dict["value"] = t->gdtype->get_integer_constant_map(true)[F];
 			}
 
 			if (!constants.is_empty()) {

@@ -907,8 +907,7 @@ bool Node::can_process_notification(int p_what) const {
 }
 
 bool Node::can_process() const {
-	ERR_FAIL_COND_V(!is_inside_tree(), false);
-	return !data.tree->is_suspended() && _can_process(data.tree->is_paused());
+	return is_inside_tree() && !data.tree->is_suspended() && _can_process(data.tree->is_paused());
 }
 
 bool Node::_can_process(bool p_paused) const {
@@ -3964,6 +3963,8 @@ void Node::_bind_methods() {
 	BIND_CONSTANT(NOTIFICATION_APPLICATION_FOCUS_IN);
 	BIND_CONSTANT(NOTIFICATION_APPLICATION_FOCUS_OUT);
 	BIND_CONSTANT(NOTIFICATION_TEXT_SERVER_CHANGED);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_PIP_MODE_ENTERED);
+	BIND_CONSTANT(NOTIFICATION_APPLICATION_PIP_MODE_EXITED);
 
 	BIND_CONSTANT(NOTIFICATION_ACCESSIBILITY_UPDATE);
 	BIND_CONSTANT(NOTIFICATION_ACCESSIBILITY_INVALIDATE);
