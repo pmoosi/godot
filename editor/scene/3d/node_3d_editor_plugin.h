@@ -259,7 +259,7 @@ private:
 	ViewportNavigationControl *position_control = nullptr;
 	ViewportNavigationControl *look_control = nullptr;
 	ViewportRotationControl *rotation_control = nullptr;
-	Gradient *frame_time_gradient = nullptr;
+	Ref<Gradient> frame_time_gradient;
 	PanelContainer *frame_time_panel = nullptr;
 	VBoxContainer *frame_time_vbox = nullptr;
 	Label *cpu_time_label = nullptr;
@@ -353,7 +353,6 @@ private:
 		Vector3 center;
 		Point2 mouse_pos;
 		Point2 original_mouse_pos;
-		bool snap = false;
 		bool show_rotation_line = false;
 		bool is_trackball = false;
 		Ref<EditorNode3DGizmo> gizmo;
@@ -576,6 +575,9 @@ public:
 	View get_view();
 
 	void add_viewport(Node3DEditorViewport *p_viewport, int p_index);
+
+	Dictionary get_split_state() const;
+	void set_split_state(const Dictionary &p_state);
 
 	Node3DEditorViewportContainer();
 };
