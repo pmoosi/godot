@@ -33,6 +33,7 @@
 #include "core/config/project_settings.h"
 #include "core/error/error_macros.h"
 #include "core/input/input.h"
+#include "core/io/resource_loader.h"
 #include "core/object/callable_mp.h"
 #include "core/object/class_db.h"
 #include "core/string/translation_server.h"
@@ -3483,7 +3484,7 @@ bool AnimationTrackEdit::_lookup_key(int p_key_idx) const {
 					ScriptEditor::get_singleton()->goto_help(vformat("class_method:%s:%s", target->get_class_name(), method));
 				} else {
 					// Still not found, which means the target doesn't have this method. Warn the user.
-					WARN_PRINT_ED(TTR(vformat("Failed to lookup method: \"%s\"", method)));
+					WARN_PRINT_ED(vformat(TTR("Failed to lookup method: \"%s\""), method));
 				}
 			}
 			return true;
