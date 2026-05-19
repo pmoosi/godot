@@ -576,7 +576,7 @@ void AnimationNode::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("tree_changed"));
 	ADD_SIGNAL(MethodInfo("node_updated", PropertyInfo(Variant::INT, "object_id")));
 	ADD_SIGNAL(MethodInfo("animation_node_renamed", PropertyInfo(Variant::INT, "object_id"), PropertyInfo(Variant::STRING, "old_name"), PropertyInfo(Variant::STRING, "new_name")));
-	ADD_SIGNAL(MethodInfo("animation_node_removed", PropertyInfo(Variant::INT, "object_id"), PropertyInfo(Variant::STRING, "name")));
+	ADD_SIGNAL(MethodInfo("animation_node_removed", PropertyInfo(Variant::INT, "object_id"), PropertyInfo(Variant::STRING, "node_name")));
 
 	BIND_ENUM_CONSTANT(FILTER_IGNORE);
 	BIND_ENUM_CONSTANT(FILTER_PASS);
@@ -790,7 +790,7 @@ void AnimationTree::_animation_node_renamed(const ObjectID &p_oid, const String 
 
 void AnimationTree::_animation_node_removed(const ObjectID &p_oid, const StringName &p_node) {
 	for (const StringName &parent_path : instance_paths[p_oid]) {
-		String base_path = String(parent_path) + String(p_node);
+		String base_path = String(parent_path) + String(p_node) + "/";
 
 		for (const PropertyInfo &E : properties) {
 			if (E.name.begins_with(base_path)) {

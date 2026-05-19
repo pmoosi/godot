@@ -795,7 +795,11 @@ HashSet<String> EditorExportPlatform::get_features(const Ref<EditorExportPreset>
 	return result;
 }
 
-EditorExportPlatform::ExportNotifier::ExportNotifier(EditorExportPlatform &p_platform, const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
+EditorExportPlatform::ExportNotifier::ExportNotifier(EditorExportPlatform &p_platform, const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags, bool p_enabled) {
+	enabled = p_enabled;
+	if (!enabled) {
+		return;
+	}
 	HashSet<String> features = p_platform.get_features(p_preset, p_debug);
 	Vector<Ref<EditorExportPlugin>> export_plugins = EditorExport::get_singleton()->get_export_plugins();
 	//initial export plugin callback
@@ -814,6 +818,9 @@ EditorExportPlatform::ExportNotifier::ExportNotifier(EditorExportPlatform &p_pla
 }
 
 EditorExportPlatform::ExportNotifier::~ExportNotifier() {
+	if (!enabled) {
+		return;
+	}
 	Vector<Ref<EditorExportPlugin>> export_plugins = EditorExport::get_singleton()->get_export_plugins();
 	for (int i = 0; i < export_plugins.size(); i++) {
 		if (GDVIRTUAL_IS_OVERRIDDEN_PTR(export_plugins[i], _export_end)) {
@@ -2758,7 +2765,7 @@ void EditorExportPlatform::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("export_project_files", "preset", "debug", "save_cb", "shared_cb"), &EditorExportPlatform::_export_project_files, DEFVAL(Callable()));
 
-	ClassDB::bind_method(D_METHOD("export_project", "preset", "debug", "path", "flags"), &EditorExportPlatform::export_project, DEFVAL(0));
+	ClassDB::bind_method(D_METHOD("export_project", "preset", "debug", "path", "flags", "notify"), &EditorExportPlatform::export_project, DEFVAL(0), DEFVAL(true));
 	ClassDB::bind_method(D_METHOD("export_pack", "preset", "debug", "path", "flags"), &EditorExportPlatform::export_pack, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("export_zip", "preset", "debug", "path", "flags"), &EditorExportPlatform::export_zip, DEFVAL(0));
 	ClassDB::bind_method(D_METHOD("export_pack_patch", "preset", "debug", "path", "patches", "flags"), &EditorExportPlatform::export_pack_patch, DEFVAL(PackedStringArray()), DEFVAL(0));
