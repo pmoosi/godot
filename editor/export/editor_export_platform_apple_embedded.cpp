@@ -213,6 +213,12 @@ String EditorExportPlatformAppleEmbedded::get_export_option_warning(const Editor
 	return String();
 }
 
+void EditorExportPlatformAppleEmbedded::get_usage_descriptions(List<EditorExportPlatformAppleEmbedded::UsageDescription> *r_descriptions) const {
+	r_descriptions->push_back({ "privacy/camera_usage_description", "NSCameraUsageDescription", "Provide a message if you need to use the camera" });
+	r_descriptions->push_back({ "privacy/microphone_usage_description", "NSMicrophoneUsageDescription", "Provide a message if you need to use the microphone" });
+	r_descriptions->push_back({ "privacy/photolibrary_usage_description", "NSPhotoLibraryUsageDescription", "Provide a message if you need access to the photo library" });
+}
+
 void EditorExportPlatformAppleEmbedded::_notification(int p_what) {
 #ifdef MACOS_ENABLED
 	if (p_what == NOTIFICATION_POSTINITIALIZE) {
@@ -330,12 +336,12 @@ void EditorExportPlatformAppleEmbedded::get_export_options(List<ExportOption> *r
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "user_data/accessible_from_files_app"), false));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "user_data/accessible_from_itunes_sharing"), false));
 
-	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/camera_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the camera"), ""));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/camera_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/microphone_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need to use the microphone"), ""));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/microphone_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "privacy/photolibrary_usage_description", PROPERTY_HINT_PLACEHOLDER_TEXT, "Provide a message if you need access to the photo library"), ""));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "privacy/photolibrary_usage_description_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
+	List<UsageDescription> usage_descriptions;
+	get_usage_descriptions(&usage_descriptions);
+	for (const UsageDescription &usage_description : usage_descriptions) {
+		r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, usage_description.preset_key, PROPERTY_HINT_PLACEHOLDER_TEXT, usage_description.placeholder), ""));
+		r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, usage_description.preset_key + "_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
+	}
 
 	for (uint64_t i = 0; i < std_size(api_info); ++i) {
 		String prop_name = vformat("privacy/%s_access_reasons", api_info[i].prop_name);
@@ -406,7 +412,9 @@ void EditorExportPlatformAppleEmbedded::_fix_config_file(const Ref<EditorExportP
 
 String EditorExportPlatformAppleEmbedded::_process_config_file_line(const Ref<EditorExportPreset> &p_preset, const String &p_line, const AppleEmbeddedConfigData &p_config, bool p_debug, const CodeSigningDetails &p_code_signing) {
 	String strnew;
-	if (p_line.contains("$binary")) {
+	if (p_line.contains("$application_supports_multiple_scenes")) {
+		strnew += p_line.replace("$application_supports_multiple_scenes", "<false/>") + "\n";
+	} else if (p_line.contains("$binary")) {
 		strnew += p_line.replace("$binary", p_config.binary_name) + "\n";
 	} else if (p_line.contains("$modules_buildfile")) {
 		strnew += p_line.replace("$modules_buildfile", p_config.modules_buildfile) + "\n";
@@ -1730,7 +1738,7 @@ Error EditorExportPlatformAppleEmbedded::_export_project_helper(const Ref<Editor
 
 	bool export_project_only = p_preset->get("application/export_project_only");
 	if (p_oneclick) {
-		export_project_only = false; // Skip for one-click deploy.
+		export_project_only = false; // Skip for remote deploy.
 	}
 
 	EditorProgress ep("export", export_project_only ? TTR("Exporting for " + get_name() + " (Project Files Only)") : TTR("Exporting for " + get_name() + ""), export_project_only ? 2 : 5, true);
@@ -2053,9 +2061,8 @@ Error EditorExportPlatformAppleEmbedded::_export_project_helper(const Ref<Editor
 		return ERR_FILE_NOT_FOUND;
 	}
 
-	Dictionary camera_usage_descriptions = p_preset->get("privacy/camera_usage_description_localized");
-	Dictionary microphone_usage_descriptions = p_preset->get("privacy/microphone_usage_description_localized");
-	Dictionary photolibrary_usage_descriptions = p_preset->get("privacy/photolibrary_usage_description_localized");
+	List<UsageDescription> usage_descriptions;
+	get_usage_descriptions(&usage_descriptions);
 
 	const String project_name = get_project_setting(p_preset, "application/config/name");
 	const Dictionary appnames = get_project_setting(p_preset, "application/config/name_localized");
@@ -2072,9 +2079,9 @@ Error EditorExportPlatformAppleEmbedded::_export_project_helper(const Ref<Editor
 			f->store_line("/* Localized versions of Info.plist keys */");
 			f->store_line("");
 			f->store_line("CFBundleDisplayName = \"" + project_name.xml_escape(true) + "\";");
-			f->store_line("NSCameraUsageDescription = \"" + p_preset->get("privacy/camera_usage_description").operator String().xml_escape(true) + "\";");
-			f->store_line("NSMicrophoneUsageDescription = \"" + p_preset->get("privacy/microphone_usage_description").operator String().xml_escape(true) + "\";");
-			f->store_line("NSPhotoLibraryUsageDescription = \"" + p_preset->get("privacy/photolibrary_usage_description").operator String().xml_escape(true) + "\";");
+			for (const UsageDescription &usage_description : usage_descriptions) {
+				f->store_line(usage_description.plist_key + " = \"" + p_preset->get(usage_description.preset_key).operator String().xml_escape(true) + "\";");
+			}
 		}
 
 		for (const String &lang : locales) {
@@ -2098,14 +2105,11 @@ Error EditorExportPlatformAppleEmbedded::_export_project_helper(const Ref<Editor
 				f->store_line("CFBundleDisplayName = \"" + appnames[lang].operator String().xml_escape(true) + "\";");
 			}
 
-			if (camera_usage_descriptions.has(lang)) {
-				f->store_line("NSCameraUsageDescription = \"" + camera_usage_descriptions[lang].operator String().xml_escape(true) + "\";");
-			}
-			if (microphone_usage_descriptions.has(lang)) {
-				f->store_line("NSMicrophoneUsageDescription = \"" + microphone_usage_descriptions[lang].operator String().xml_escape(true) + "\";");
-			}
-			if (photolibrary_usage_descriptions.has(lang)) {
-				f->store_line("NSPhotoLibraryUsageDescription = \"" + photolibrary_usage_descriptions[lang].operator String().xml_escape(true) + "\";");
+			for (const UsageDescription &usage_description : usage_descriptions) {
+				Dictionary localized = p_preset->get(usage_description.preset_key + "_localized");
+				if (localized.has(lang)) {
+					f->store_line(usage_description.plist_key + " = \"" + localized[lang].operator String().xml_escape(true) + "\";");
+				}
 			}
 		}
 	}

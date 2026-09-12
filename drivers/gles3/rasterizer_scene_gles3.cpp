@@ -659,20 +659,34 @@ void RasterizerSceneGLES3::_update_dirty_skys() {
 	dirty_sky_list = nullptr;
 }
 
+GLES3::SkyMaterialData *RasterizerSceneGLES3::_get_flat_color_sky_material_data(RID p_env) {
+	ERR_FAIL_COND_V(p_env.is_null(), nullptr);
+
+	GLES3::MaterialStorage *material_storage = GLES3::MaterialStorage::get_singleton();
+
+	GLES3::SkyMaterialData *material_data = nullptr;
+	RID sky_material = sky_globals.fog_material;
+
+	material_data = static_cast<GLES3::SkyMaterialData *>(material_storage->material_get_data(sky_material, RSE::SHADER_SKY));
+
+	if (!material_data) {
+		sky_material = sky_globals.default_material;
+		material_data = static_cast<GLES3::SkyMaterialData *>(material_storage->material_get_data(sky_material, RSE::SHADER_SKY));
+	}
+
+	return material_data;
+}
+
 GLES3::SkyMaterialData *RasterizerSceneGLES3::_get_sky_material_data(RID p_env) {
 	ERR_FAIL_COND_V(p_env.is_null(), nullptr);
 
 	GLES3::MaterialStorage *material_storage = GLES3::MaterialStorage::get_singleton();
 	Sky *sky = sky_owner.get_or_null(environment_get_sky(p_env));
-	RSE::EnvironmentBG background = environment_get_background(p_env);
 
 	GLES3::SkyMaterialData *material_data = nullptr;
 	RID sky_material;
 
-	if (background == RSE::ENV_BG_CLEAR_COLOR || background == RSE::ENV_BG_COLOR) {
-		sky_material = sky_globals.fog_material;
-		material_data = static_cast<GLES3::SkyMaterialData *>(material_storage->material_get_data(sky_material, RSE::SHADER_SKY));
-	} else if (sky) {
+	if (sky) {
 		sky_material = sky->material;
 
 		if (sky_material.is_valid()) {
@@ -889,14 +903,15 @@ void RasterizerSceneGLES3::_setup_sky(const RenderDataGLES3 *p_render_data, cons
 void RasterizerSceneGLES3::_draw_sky(RID p_env, const Projection &p_projection, const Transform3D &p_transform, float p_sky_energy_multiplier, float p_luminance_multiplier, bool p_use_multiview, bool p_flip_y, bool p_apply_environment_effects_in_post) {
 	ERR_FAIL_COND(p_env.is_null());
 
-	GLES3::SkyMaterialData *material_data = _get_sky_material_data(p_env);
+	RSE::EnvironmentBG background = environment_get_background(p_env);
+	GLES3::SkyMaterialData *material_data = (background == RSE::ENV_BG_CLEAR_COLOR || background == RSE::ENV_BG_COLOR) ? _get_flat_color_sky_material_data(p_env) : _get_sky_material_data(p_env);
 	ERR_FAIL_NULL(material_data);
 	material_data->bind_uniforms();
 
 	GLES3::SkyShaderData *shader_data = material_data->shader_data;
 	ERR_FAIL_NULL(shader_data);
 
-	uint64_t spec_constants = p_use_multiview ? SkyShaderGLES3::USE_MULTIVIEW : 0;
+	uint64_t spec_constants = p_use_multiview ? (uint64_t)SkyShaderGLES3::USE_MULTIVIEW : 0;
 	if (p_flip_y) {
 		spec_constants |= SkyShaderGLES3::USE_INVERTED_Y;
 	}
@@ -2410,6 +2425,9 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 	Ref<RenderSceneBuffersGLES3> rb = p_render_buffers;
 	ERR_FAIL_COND(rb.is_null());
 
+	// View count of our render target must match our camera data.
+	ERR_FAIL_COND(rb->get_view_count() != p_camera_data->view_count);
+
 	if (rb->get_scaling_3d_mode() != RSE::VIEWPORT_SCALING_3D_MODE_OFF) {
 		// If we're scaling, we apply tonemapping etc. in post, so disable it during rendering
 		apply_environment_effects_in_post = true;
@@ -2616,6 +2634,10 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 					draw_sky_fog_only = true;
 					GLES3::MaterialStorage::get_singleton()->material_set_param(sky_globals.fog_material, "clear_color", Variant(clear_color));
 				}
+
+				clear_color.r *= render_data.luminance_multiplier;
+				clear_color.g *= render_data.luminance_multiplier;
+				clear_color.b *= render_data.luminance_multiplier;
 
 				clear_color = clear_color.srgb_to_linear();
 				clear_color.r *= bg_energy_multiplier;
@@ -2838,7 +2860,7 @@ void RasterizerSceneGLES3::render_scene(const Ref<RenderSceneBuffers> &p_render_
 			spec_constant_base_flags |= SceneShaderGLES3::DISABLE_LIGHT_DIRECTIONAL;
 		}
 
-		if (render_data.environment.is_null() || (render_data.environment.is_valid() && !environment_get_fog_enabled(render_data.environment))) {
+		if (render_data.environment.is_null() || (render_data.environment.is_valid() && !environment_get_fog_enabled(render_data.environment)) || get_debug_draw_mode() == RSE::VIEWPORT_DEBUG_DRAW_UNSHADED) {
 			spec_constant_base_flags |= SceneShaderGLES3::DISABLE_FOG;
 		}
 
@@ -3610,6 +3632,9 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 
 							if (lm->uses_spherical_harmonics) {
 								spec_constants |= SceneShaderGLES3::USE_SH_LIGHTMAP;
+								if (lm->specular_intensity > 0.0f) {
+									spec_constants |= SceneShaderGLES3::USE_LIGHTMAP_SPECULAR;
+								}
 							}
 
 							if (lightmap_bicubic_upscale) {
@@ -3644,6 +3669,10 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 						if (lm->shadowmask_mode != RSE::SHADOWMASK_MODE_NONE) {
 							spec_constants |= SceneShaderGLES3::USE_LIGHTMAP;
 							disable_lightmaps = false;
+
+							if (lm->uses_spherical_harmonics && lm->specular_intensity > 0.0f) {
+								spec_constants |= SceneShaderGLES3::USE_LIGHTMAP_SPECULAR;
+							}
 
 							if (lightmap_bicubic_upscale) {
 								spec_constants |= SceneShaderGLES3::LIGHTMAP_BICUBIC_FILTER;
@@ -3768,6 +3797,9 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 							}
 
 							material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SHADOWMASK_MODE, (uint32_t)lm->shadowmask_mode, shader->version, instance_variant, spec_constants);
+							if (spec_constants & SceneShaderGLES3::USE_LIGHTMAP_SPECULAR) {
+								material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SPECULAR_INTENSITY, lm->specular_intensity, shader->version, instance_variant, spec_constants);
+							}
 
 							if (lm->shadow_texture.is_valid()) {
 								tex = GLES3::TextureStorage::get_singleton()->texture_get_texid(lm->shadow_texture);
@@ -3824,6 +3856,9 @@ void RasterizerSceneGLES3::_render_list_template(RenderListParameters *p_params,
 							exposure_normalization = enf / lm->baked_exposure;
 						}
 						material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_EXPOSURE_NORMALIZATION, exposure_normalization, shader->version, instance_variant, spec_constants);
+						if (spec_constants & SceneShaderGLES3::USE_LIGHTMAP_SPECULAR) {
+							material_storage->shaders.scene_shader.version_set_uniform(SceneShaderGLES3::LIGHTMAP_SPECULAR_INTENSITY, lm->specular_intensity, shader->version, instance_variant, spec_constants);
+						}
 
 						if (lm->uses_spherical_harmonics) {
 							Basis to_lm = li->transform.basis.inverse() * p_render_data->cam_transform.basis;

@@ -31,6 +31,7 @@
 #include "editor_object_selector.h"
 
 #include "core/object/callable_mp.h"
+#include "editor/docks/inspector_dock.h"
 #include "editor/editor_data.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
@@ -130,30 +131,7 @@ void EditorObjectSelector::update_path() {
 		}
 
 		if (i == history->get_path_size() - 1) {
-			String name;
-			if (obj->has_method("_get_editor_name")) {
-				name = obj->call("_get_editor_name");
-			} else if (Object::cast_to<Resource>(obj)) {
-				Resource *r = Object::cast_to<Resource>(obj);
-				if (r->get_path().is_resource_file()) {
-					name = r->get_path().get_file();
-				} else {
-					name = r->get_name();
-				}
-
-				if (name.is_empty()) {
-					name = r->get_class();
-				}
-			} else if (obj->is_class("EditorDebuggerRemoteObjects")) {
-				name = obj->call("get_title");
-			} else if (Object::cast_to<Node>(obj)) {
-				name = Object::cast_to<Node>(obj)->get_name();
-			} else if (Object::cast_to<Resource>(obj) && !Object::cast_to<Resource>(obj)->get_name().is_empty()) {
-				name = Object::cast_to<Resource>(obj)->get_name();
-			} else {
-				name = obj->get_class();
-			}
-
+			const String name = InspectorDock::get_object_display_name(obj);
 			current_object_label->set_text(name);
 			set_tooltip_text(name + "\n" + vformat(TTR("Type: %s"), obj->get_class()) + "\n" + TTR("Click to open a list of sub-resources."));
 		}
@@ -230,7 +208,6 @@ EditorObjectSelector::EditorObjectSelector(EditorSelectionHistory *p_history) {
 	current_object_label->set_text_overrun_behavior(TextServer::OVERRUN_TRIM_ELLIPSIS);
 	current_object_label->set_h_size_flags(SIZE_EXPAND_FILL);
 	current_object_label->set_vertical_alignment(VERTICAL_ALIGNMENT_CENTER);
-	current_object_label->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	main_hb->add_child(current_object_label);
 
 	sub_objects_icon = memnew(TextureRect);
@@ -240,10 +217,9 @@ EditorObjectSelector::EditorObjectSelector(EditorSelectionHistory *p_history) {
 
 	sub_objects_menu = memnew(PopupMenu);
 	sub_objects_menu->set_shrink_width(false);
-	sub_objects_menu->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	add_child(sub_objects_menu);
 	sub_objects_menu->connect("about_to_popup", callable_mp(this, &EditorObjectSelector::_about_to_show));
 	sub_objects_menu->connect(SceneStringName(id_pressed), callable_mp(this, &EditorObjectSelector::_id_pressed));
 
-	set_auto_translate(false);
+	set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 }

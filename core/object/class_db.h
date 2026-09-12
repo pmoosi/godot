@@ -108,15 +108,6 @@ public:
 	};
 
 public:
-	struct PropertySetGet {
-		int index;
-		StringName setter;
-		StringName getter;
-		const MethodBind *_setptr = nullptr;
-		const MethodBind *_getptr = nullptr;
-		Variant::Type type;
-	};
-
 	struct ClassInfo {
 		APIType api = API_NONE;
 		ClassInfo *inherits_ptr = nullptr;
@@ -125,13 +116,7 @@ public:
 
 		ObjectGDExtension *gdextension = nullptr;
 
-		HashMap<StringName, LocalVector<MethodBind *>> method_map_compatibility;
-
-		List<PropertyInfo> property_list;
-		HashMap<StringName, PropertyInfo> property_map;
-
 #ifdef DEBUG_ENABLED
-		HashSet<StringName> methods_in_properties;
 		List<MethodInfo> virtual_methods;
 		HashMap<StringName, MethodInfo> virtual_methods_map;
 		HashMap<StringName, Vector<Error>> method_error_values;
@@ -142,7 +127,6 @@ public:
 		List<StringName> dependency_list;
 #endif
 
-		AHashMap<StringName, PropertySetGet> property_setget;
 		HashMap<StringName, Vector<uint32_t>> virtual_methods_compat;
 
 		bool disabled = false;
@@ -229,7 +213,6 @@ private:
 	// Non-locking variants of get_parent_class and is_parent_class.
 	static StringName _get_parent_class(const StringName &p_class);
 	static bool _is_parent_class(const StringName &p_class, const StringName &p_inherits);
-	static void _bind_compatibility(ClassInfo *r_type, MethodBind *p_method);
 	static MethodBind *_bind_vararg_method(MethodBind *p_bind, const StringName &p_name, const Vector<Variant> &p_default_args, bool p_compatibility);
 	static void _bind_method_custom(const StringName &p_class, MethodBind *p_method, bool p_compatibility, bool p_take_ownership = true);
 
@@ -481,9 +464,9 @@ public:
 	static bool has_method(const StringName &p_class, const StringName &p_method, bool p_no_inheritance = false);
 	static void set_method_flags(const StringName &p_class, const StringName &p_method, int p_flags);
 
-	static void get_method_list(const StringName &p_class, List<MethodInfo> *p_methods, bool p_no_inheritance = false, bool p_exclude_from_properties = false);
-	static void get_method_list_with_compatibility(const StringName &p_class, List<Pair<MethodInfo, uint32_t>> *p_methods_with_hash, bool p_no_inheritance = false, bool p_exclude_from_properties = false);
-	static bool get_method_info(const StringName &p_class, const StringName &p_method, MethodInfo *r_info, bool p_no_inheritance = false, bool p_exclude_from_properties = false);
+	static void get_method_list(const StringName &p_class, List<MethodInfo> *p_methods, bool p_no_inheritance = false);
+	static void get_method_list_with_compatibility(const StringName &p_class, List<Pair<MethodInfo, uint32_t>> *p_methods_with_hash, bool p_no_inheritance = false);
+	static bool get_method_info(const StringName &p_class, const StringName &p_method, MethodInfo *r_info, bool p_no_inheritance = false);
 	static int get_method_argument_count(const StringName &p_class, const StringName &p_method, bool *r_is_valid = nullptr, bool p_no_inheritance = false);
 	static const MethodBind *get_method(const StringName &p_class, const StringName &p_name);
 	static const MethodBind *get_method_with_compatibility(const StringName &p_class, const StringName &p_name, uint64_t p_hash, bool *r_method_exists = nullptr, bool *r_is_deprecated = nullptr);

@@ -34,6 +34,7 @@
 #include "run_icon_svg.gen.h"
 
 #include "editor/editor_node.h"
+#include "editor/export/editor_export_platform_apple_embedded.h"
 
 Vector<String> EditorExportPlatformVisionOS::device_types({ "realityDevice" });
 
@@ -58,7 +59,7 @@ void EditorExportPlatformVisionOS::get_export_options(List<ExportOption> *r_opti
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/min_visionos_version"), get_minimum_deployment_target()));
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "application/app_role", PROPERTY_HINT_ENUM, "Window,Immersive"), 0));
-	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "application/immersion_style", PROPERTY_HINT_ENUM, "Full,Mixed"), 1));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "application/immersion_style", PROPERTY_HINT_ENUM, "Full,Mixed,Progressive"), 1));
 
 	// Front layer falls back to the project icon; middle/back use a black placeholder when unset.
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "icons/icon_front_layer_1024x1024", PROPERTY_HINT_FILE_PATH, "*.svg,*.png,*.webp,*.jpg,*.jpeg"), ""));
@@ -228,6 +229,11 @@ String EditorExportPlatformVisionOS::_process_config_file_line(const Ref<EditorE
 	} else if (p_line.contains("$valid_archs")) {
 		strnew += p_line.replace("$valid_archs", "arm64") + "\n";
 
+		// Application Scene Manifest - Supports Multiple Scenes
+	} else if (p_line.contains("$application_supports_multiple_scenes")) {
+		// visionOS overridden to true to support changing immersion style at runtime.
+		strnew += p_line.replace("$application_supports_multiple_scenes", "<true/>") + "\n";
+
 		// Application Scene Manifest - Default Session Role
 	} else if (p_line.contains("$application_scene_manifest_default_session_role")) {
 		int app_role_enum = (int)p_preset->get("application/app_role");
@@ -260,6 +266,9 @@ String EditorExportPlatformVisionOS::_process_config_file_line(const Ref<EditorE
 			case 1: // Mixed
 				initial_immersion_style = "UIImmersionStyleMixed";
 				break;
+			case 2: // Progressive
+				initial_immersion_style = "UIImmersionStyleProgressive";
+				break;
 		}
 
 		String value =
@@ -274,9 +283,45 @@ String EditorExportPlatformVisionOS::_process_config_file_line(const Ref<EditorE
 
 		strnew += p_line.replace("$application_scene_manifest_immersive_configuration", value) + "\n";
 
+		// Info.plist NSHandsTrackingUsageDescription
+	} else if (p_line.contains("$hand_tracking_usage_description")) {
+		if (GLOBAL_GET("xr/visionos/enable_hand_tracking")) {
+			String description = p_preset->get("privacy/hand_tracking_usage_description");
+			String value = "<key>NSHandsTrackingUsageDescription</key>\n";
+			value += "<string>" + description + "</string>";
+			strnew += p_line.replace("$hand_tracking_usage_description", value) + "\n";
+		} else {
+			strnew += p_line.replace("$hand_tracking_usage_description", "") + "\n";
+		}
+
+		// Info.plist NSAccessoryTrackingUsageDescription
+	} else if (p_line.contains("$accessory_tracking_usage_description")) {
+		if (GLOBAL_GET("xr/visionos/enable_controller_tracking")) {
+			String description = p_preset->get("privacy/accessory_tracking_usage_description");
+			String value = "<key>NSAccessoryTrackingUsageDescription</key>\n";
+			value += "<string>" + description + "</string>\n";
+			value += "<key>GCSupportedGameControllers</key>\n"
+					 "<array>\n"
+					 "    <dict>\n"
+					 "        <key>ProfileName</key>\n"
+					 "        <string>SpatialGamepad</string>\n"
+					 "    </dict>\n"
+					 "</array>";
+			strnew += p_line.replace("$accessory_tracking_usage_description", value) + "\n";
+		} else {
+			strnew += p_line.replace("$accessory_tracking_usage_description", "") + "\n";
+		}
+
 		// Apple Embedded common
 	} else {
 		strnew += EditorExportPlatformAppleEmbedded::_process_config_file_line(p_preset, p_line, p_config, p_debug, p_code_signing);
 	}
 	return strnew;
+}
+
+void EditorExportPlatformVisionOS::get_usage_descriptions(List<UsageDescription> *r_descriptions) const {
+	EditorExportPlatformAppleEmbedded::get_usage_descriptions(r_descriptions);
+
+	r_descriptions->push_back({ "privacy/hand_tracking_usage_description", "NSHandsTrackingUsageDescription", "Provide a message if you need to use hand tracking" });
+	r_descriptions->push_back({ "privacy/accessory_tracking_usage_description", "NSAccessoryTrackingUsageDescription", "Provide a message if you need to use controller tracking" });
 }
