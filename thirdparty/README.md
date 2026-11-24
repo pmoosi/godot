@@ -94,6 +94,7 @@ Patches:
 - `0004-clang-warning-exclude.patch` ([GH-111346](https://github.com/godotengine/godot/pull/111346))
 - `0005-unused-typedef.patch` ([GH-111445](https://github.com/godotengine/godot/pull/111445))
 - `0006-explicit-includes.patch` ([GH-111767](https://github.com/godotengine/godot/pull/111767))
+- `0007-unused-value.patch` ([GH-125561](https://github.com/godotengine/godot/pull/125561))
 
 
 ## brotli
@@ -701,7 +702,7 @@ Patches:
 ## mbedtls
 
 - Upstream: https://github.com/Mbed-TLS/mbedtls
-- Version: 4.1.1 (0a8fda272a5a0abef3b47c91bed37185d5a726b1, 2026)
+- Version: 4.1.2 (8808d31cdffb1a2c82645a531a96a0f26dd3e8c3, 2026)
 - License: Apache 2.0
 
 Update instructions:
@@ -847,10 +848,6 @@ Collection of single-file libraries used in Godot components.
   * License: MIT
   * Patches:
     - `FastNoiseLite-0001-namespace-warnings.patch` ([GH-88526](https://github.com/godotengine/godot/pull/88526))
-- `gamemode_client.h`
-  * Upstream: https://github.com/FeralInteractive/gamemode (`lib/gamemode_client.h`)
-  * Version: 1.8.2 (c54d6d4243b0dd0afcb49f2c9836d432da171a2b, 2024)
-  * License: BSD-3-Clause
 - `ifaddrs-android.{cc,h}`
   * Upstream: https://chromium.googlesource.com/external/webrtc/stable/talk/+/master/base/ifaddrs-android.h
   * Version: git (fbb1efa61417540336cf52976d4ff4394bfa795b, 2013)
@@ -1067,7 +1064,7 @@ proposed by these libraries and better integrate them with Godot.
 ## sdl
 
 - Upstream: https://github.com/libsdl-org/SDL
-- Version: 3.4.16 (fa2c02bb6e21974a89ea9824bc53c9932abe5f9c, 2026)
+- Version: 3.4.20 (f00dc919ca35b9756316e86c4777392de442f9b2, 2026)
 - License: Zlib
 - Vendored: hidapi 0.14.0, license BSD-3-Clause
 
